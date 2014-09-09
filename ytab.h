@@ -1,3 +1,10 @@
+/*
+ * John Goettsche
+ * CS445
+ *
+ * contains the definitions for yylex().
+ */
+
 #define ELIPSIS 257
 #define AUTO 258
 #define BREAK 259
@@ -83,6 +90,11 @@
 #define IDENT 339
 #define TYPEDEF_NAME 340
 #define BAD_TOKEN 341
+
+//added items
 #define BOOL 342
 #define NEW 343
 #define DELETE 344
+#define COLONCOLON 345
+#define USING 346
+#define NAMESPACE 347

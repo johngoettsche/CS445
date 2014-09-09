@@ -1,3 +1,10 @@
+/*
+ * John Goettsche
+ * CS445
+ *
+ * main procedure for 120++ lexical scanner.
+ */
+
 #include "120lex.h"
 
 int main(int argc, char **argv)

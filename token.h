@@ -1,5 +1,9 @@
-extern char *yytext;
-extern int line_num;
+/*
+ * John Goettsche
+ * CS445
+ *
+ * token.h defines Token and TokenList
+ */
 
 typedef struct Token Token;
 struct Token{
@@ -17,6 +21,8 @@ struct TokenList {
   struct TokenList *next;
 };
 
-extern Token *yytoken;
-extern int tcode;
 extern char *fname;
+extern int line_num;
+extern int tcode;
+extern char *yytext;
+extern Token *yytoken;

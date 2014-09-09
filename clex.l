@@ -1,3 +1,10 @@
+/*
+ * John Goettsche
+ * CS445
+ *
+ * yylex().
+ */
+
 D        [0-9]
 L        [a-zA-Z_]
 FS       (f|F|l|L)
@@ -12,6 +19,7 @@ LIT      \"(\\.|[^\\"])*\"
 #include <ctype.h>
 #include "ytab.h"
 #include "token.h"
+#include "errors.h"
 
 /*
 extern YYSTYPE yylval;
@@ -31,11 +39,16 @@ void pushFileStack();
 void popFileStack();
 
 int included_iostream = 0;
+int included_cstdlib = 0;
+int included_ctime = 0; 
+int included_string = 0;
+int included_fstream = 0;
 
 /* #define DEBUG */
 
 /* define globals */
 Token *yytoken;
+ErrorMessage *e_message;
 int line_num = 1;
 int StructKeywordSeen = 0;
 int errors = 0;
@@ -94,6 +107,13 @@ FILE *saved_yyin;
 "volatile"              { return VOLATILE; }
 "while"                 { return WHILE; }
 
+"using"                 { return USING; }
+"namespace"             { return NAMESPACE; }
+
+"and"                   {return ANDAND; }
+"or"                    {return OROR; }
+"not"                   {return BANG; }
+
 {L}({L}|{D})*           { return IDENT; }
 
 {D}+{IS}?               { return ICON; }
@@ -109,7 +129,12 @@ FILE *saved_yyin;
 "#include"[ ]*\"[^\\"]+\"  { handle_include(); }
 
 "#include <iostream>"   { included_iostream = 1; }
+"#include <cstdlib>"    { included_cstdlib = 1; }
+"#include <ctime>"      { included_ctime = 1; }
+"#include <string>"     { included_string = 1; }
+"#include <fstream>"    { included_fstream = 1; }
 
+"::"                    { return COLONCOLON; }
 "+="                    { return PLASN; }
 "-="                    { return MIASN; }
 "*="                    { return MUASN; }
@@ -153,30 +178,27 @@ FILE *saved_yyin;
 "^"                     { return ER; }
 "|"                     { return OR; }
 "?"                     { return QUEST; }
-<<EOF>> {  popFileStack();
-     			yypop_buffer_state();
-            
-                 if ( !YY_CURRENT_BUFFER )
-                     {
-                     yyterminate();
-                     }
-                 }
+.                       { getErrorMessage(101);
+                          lexerr(yytext); }
+
+<<EOF>>                 { popFileStack();
+     			              yypop_buffer_state();
+                          if ( !YY_CURRENT_BUFFER ) {
+                             yyterminate();
+                          }
+                        }
 
 %%
 
 extern int yychar;
 extern int errors;
 
-//yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
-
 void lexerr(char *s)
 {
    errors++;
-   fprintf(stderr, "%s: lexical error", s);
-
-   /* to do: add mechanism for reporting file name and line number */
-
-   fprintf(stderr, ", token = \"%s\"\n", yytext);
+   fprintf(stderr, "error #%d: %s, line: %d\n", errors, fname, line_num);
+	fprintf(stderr, "\t\'%s\' is a lexical error.  It is not a recognized token symbol.\n", yytext);
+	fflush(stderr);
 }
 
 
@@ -196,8 +218,6 @@ int yywrap()
 }
 
 void pushFileStack(){
-
- printf("%s->",fname);
 	FileStack *fileStack = (FileStack *)calloc(1, sizeof(FileStack));
 	char *filename = (char *)calloc(strlen(fname) + 1, sizeof(char));
 	strcpy(filename, fname);
@@ -210,18 +230,13 @@ void pushFileStack(){
 		fileStack->next = topFile;
 		topFile = fileStack;
 	}
- 
 }
 
 void popFileStack(){
 	if(topFile!=NULL){
-printf("%s->",fname);	
-	/* resolve this memory leak issue */
-	
 		fname = topFile->filename;
 		line_num = topFile->lineno;
 		topFile=topFile->next;
-printf("%s\n",fname);
 	}
 }
 
@@ -233,12 +248,11 @@ void handle_include()
 	
    fname = strchr(yytext, '\"')+1;
    fname[strlen(fname)-1] = '\0';
-fprintf(stdout, "included filename '%s'\n", fname); fflush(stdout);
+//fprintf(stdout, "included filename '%s'\n", fname); fflush(stdout);
    yyin = fopen(fname,"r");
    if (yyin == NULL) {
      lexerr("cannot open include file");
      exit(1);
    }
-	printf("%s\n",fname);
-   yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
+	yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 }

@@ -1,10 +1,19 @@
+/*
+ * John Goettsche
+ * CS445
+ *
+ * token.c contains the functions cvnIntString, define_token, printToken, printAllTokens
+ */
+ 
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "token.h"
 #include "ytab.h"
-//#include "cgram.tab.h"
 
+/*
+ * handles the escape items in a string of text
+ */
 char *cvnIntString(int length, int *stVal){
   char *st = (char *)calloc(length, sizeof(char));
   int s = 0;  /* 182 */
@@ -45,6 +54,9 @@ char *cvnIntString(int length, int *stVal){
   return st;
 }
 
+/*
+ * defines the token attributes
+ */
 int define_token(){
    Token *token = yytoken;
 	int length = strlen(yytext) + 1;
@@ -69,6 +81,9 @@ int define_token(){
 	return 0;
 }
 
+/*
+ * prints a single token
+ */
 void printToken(Token *token)
 { 
    if(token->category > 257) {
@@ -85,6 +100,9 @@ void printToken(Token *token)
 	}
 }
 
+/*
+ * prints a list of all tokens in the token list
+ */
 void printAllTokens(TokenList *current)
 {
   fprintf(stdout, "Category                  Text  Lineno        Filename              Ival/Sval\n");
