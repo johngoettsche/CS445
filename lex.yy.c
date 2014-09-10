@@ -1521,7 +1521,7 @@ YY_RULE_SETUP
 case 107:
 YY_RULE_SETUP
 #line 181 "clex.l"
-{ getErrorMessage(101);
+{ getErrorMessage(1);
                           lexerr(yytext); }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
@@ -2546,8 +2546,8 @@ extern int errors;
 void lexerr(char *s)
 {
    errors++;
-   fprintf(stderr, "error #%d: %s, line: %d\n", errors, fname, line_num);
-	fprintf(stderr, "\t\'%s\' is a lexical error.  It is not a recognized token symbol.\n", yytext);
+   fprintf(stderr, "error #%d: %s, line: %d ", errors, fname, line_num);
+	fprintf(stderr, "%s\t\'%s\' %s\n",e_message->errorType, s, e_message->message);
 	fflush(stderr);
 }
 

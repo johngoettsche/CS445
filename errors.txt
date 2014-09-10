@@ -1,1 +1,3 @@
-101 lexical error
+1 
+Lexical Error
+is not a recognized token symbol.

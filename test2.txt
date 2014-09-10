@@ -1,6 +1,8 @@
 "this is a \'test\'"
 switch(a)
 case 1 :
+   printf("\tstuff");
+	x = "\0some stuff";
    printf("%d\n", str);
 	break;
 case 2 :

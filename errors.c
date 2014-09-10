@@ -8,14 +8,17 @@
 #include "errors.h" 
 
 void getErrorMessage(int ecode){
+   int size = 1024;
    int code;
-	char *etype;
-	char *mes;
+	char line[size];
+	char etype[size];
+	char mes[size];
 	e_message = (ErrorMessage *)calloc(1, sizeof(ErrorMessage));
 	ef = fopen("errors.txt", "r");
-printf("finding errors\n");
-	while(fscanf(ef, "%d %s %s", &code, etype, mes) != EOF){
-		printf("%d\n", code);
+	while(fgets(line, size, ef)){
+		code = atoi(line);
+		fgets(etype, size, ef);
+		fgets(mes, size, ef);
 		if(code == ecode){
 			e_message->number = code;
 			e_message->errorType = etype;
@@ -23,5 +26,4 @@ printf("finding errors\n");
 		}
 	}
 	close(ef);
-printf("finished reading file\n");
 }

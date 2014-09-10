@@ -178,7 +178,7 @@ FILE *saved_yyin;
 "^"                     { return ER; }
 "|"                     { return OR; }
 "?"                     { return QUEST; }
-.                       { getErrorMessage(101);
+.                       { getErrorMessage(1);
                           lexerr(yytext); }
 
 <<EOF>>                 { popFileStack();
@@ -196,8 +196,8 @@ extern int errors;
 void lexerr(char *s)
 {
    errors++;
-   fprintf(stderr, "error #%d: %s, line: %d\n", errors, fname, line_num);
-	fprintf(stderr, "\t\'%s\' is a lexical error.  It is not a recognized token symbol.\n", yytext);
+   fprintf(stderr, "error #%d: %s, line: %d ", errors, fname, line_num);
+	fprintf(stderr, "%s\t\'%s\' %s\n",e_message->errorType, s, e_message->message);
 	fflush(stderr);
 }
 

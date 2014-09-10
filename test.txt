@@ -1,11 +1,14 @@
 #include "test2.txt"
 
-/* hello world sample program */
+/* hello world sample program /* nested commment */ */
 
-main() // main program
+main() /// main program
 {
+   /* //added comment */
+	
+	// /* more comment*/ 
    printf("Hello World\n"); //print stuff
    return 11; // returns a eleven
 }
 stuff::stuff @
-/* complete */
+/* complete "string in comment "*/

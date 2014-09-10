@@ -15,39 +15,40 @@
  * handles the escape items in a string of text
  */
 char *cvnIntString(int length, int *stVal){
-  char *st = (char *)calloc(length, sizeof(char));
-  int s = 0;  /* 182 */
-  int i;
-  int escape = 0;
-  for(i = 0; i < length; i++){
-    if(escape == 0){
-      if(stVal[i] != (int)'\"')
-        if(stVal[i] == (int)'\\') escape = 1;
-        else {
-          st[s] = (char)stVal[i];
-          s++;
-        }
-    }else{
-      if(stVal[i] == (int)'n'){
-        int ch = 10;
-        st[s] = (char)ch;
-        s++;
-      }
-      if(stVal[i] == (int)'t'){
-        int ch = 9;
-        st[s] = (char)ch;
-        s++;
-      }
-      if(stVal[i] == (int)'\'' || stVal[i] == (int)'\"' || stVal[i] == (int)'\\') {
-        int ch = 39;
-        st[s] = (char)stVal[i];
-        s++;
-      }
-      if(stVal[i] == (int)'0'){
-        int ch = 0;
-        st[s] = (char)ch;
-        s++;
-      }
+   char *st = (char *)calloc(length, sizeof(char));
+   int s = 0;  /* 182 */
+   int i;
+   int escape = 0;
+   for(i = 0; i < length; i++){
+      if(escape == 0){
+         if(stVal[i] != (int)'\"')
+            if(stVal[i] == (int)'\\') escape = 1;
+            else {
+               st[s] = (char)stVal[i];
+               s++;
+            }
+      }else{
+		   int ch = -1;
+	      switch(stVal[i]) {
+		      case (int)'n' :
+		         ch = 10;
+				   break;
+			   case (int)'t' :
+			      ch = 9;
+				   break;
+			   case (int)'\'' :
+			   case (int)'\"' :
+			   case (int)'\\' :
+			      ch = stVal[i];
+				   break;
+			   case (int)'0' :
+			      ch = 0;
+				   break;
+			}
+			if (ch >= 0) {
+			   st[s] = (char)ch;
+				s++;
+			}			
       escape = 0;
     }
   }
