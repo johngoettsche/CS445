@@ -16,6 +16,7 @@
  */
 char *cvnIntString(int length, int *stVal){
    char *st = (char *)calloc(length, sizeof(char));
+	if(st == NULL) memoryError();
    int s = 0;  /* 182 */
    int i;
    int escape = 0;
@@ -56,30 +57,39 @@ char *cvnIntString(int length, int *stVal){
 }
 
 /*
- * defines the token attributes
+ * creates a token with its attributes
  */
-int define_token(){
-   Token *token = yytoken;
+ 
+Token *createToken(int tcode){
+	Token *token = (Token *)calloc(1, sizeof(Token));
+	if(token == NULL)memoryError();
+	
 	int length = strlen(yytext) + 1;
-   char *text = (char *)calloc(length, sizeof(char));
+	char *text = (char *)calloc(length, sizeof(char));
+	if(text == NULL) memoryError();
    strcpy(text, yytext); 
-   token->category = tcode;
+	token->category = tcode;
    token->text = text;
    token->lineno = line_num;
+	
 	char *filename = (char *)calloc(strlen(fname) + 1, sizeof(char));
+	if(filename == NULL) memoryError();
 	strcpy(filename, fname);
    token->filename =filename;
-   if(tcode == ICON) token->ival = atoi(token->text);
+	
+	if(tcode == ICON) token->ival = atoi(token->text);
 	else token->ival = NULL;
    if(tcode == STRING){
       token->ival = length;
       int *st = (int *)calloc(length, sizeof(int));
+		if(st == NULL) memoryError();
       int i;
       for(i = 0; i < length; i++) st[i] = (int)text[i];
       token->sval = st;
    }
 	else token->sval = NULL;
-	return 0;
+	
+	return token;
 }
 
 /*

@@ -98,3 +98,4 @@
 #define COLONCOLON 345
 #define USING 346
 #define NAMESPACE 347
+#define PDEFINE 348
