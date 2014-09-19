@@ -17,7 +17,8 @@ LIT      \"(\\.|[^\\"])*\"
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "ytab.h"
+//#include "ytab.h"
+#include "parser.tab.h"
 #include "token.h"
 #include "errors.h"
 
@@ -89,6 +90,7 @@ FILE *saved_yyin;
 "break"                 { return createToken(BREAK); }
 "case"                  { return createToken(CASE); }
 "char"                  { return createToken(CHAR); }
+"class"						{ return createToken(CLASS); }
 "const"                 { return createToken(CONST); }
 "continue"              { return createToken(CONTINUE); }
 "default"               { return createToken(DEFAULT); }
@@ -105,6 +107,8 @@ FILE *saved_yyin;
 "int"                   { return createToken(INT); }
 "long"                  { return createToken(LONG); }
 "new"                   { return createToken(NEW); }
+"private"					{ return createToken(PRIVATE); }
+"public"						{ return createToken(PUBLIC); }
 "register"              { return createToken(REGISTER); }
 "return"                { return createToken(RETURN); }
 "short"                 { return createToken(SHORT); }
@@ -122,6 +126,9 @@ FILE *saved_yyin;
 
 "using"                 { return createToken(USING); }
 "namespace"             { return createToken(NAMESPACE); }
+
+"true"						{ return createToken(TRUE); }
+"false"						{ return createToken(FALSE); }
 
 "and"                   {return createToken(ANDAND); }
 "or"                    {return createToken(OROR); }

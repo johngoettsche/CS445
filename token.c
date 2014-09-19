@@ -9,7 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "token.h"
-#include "ytab.h"
+//#include "ytab.h"
+#include "parser.tab.h"
 
 /*
  * handles the escape items in a string of text
