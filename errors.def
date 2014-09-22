@@ -1,15 +1,15 @@
-1 
+50001 
 Lexical Error
 is not a recognized token symbol.
-2
+50002
 Comment Error
 comment does not have closing comment symbol.
-3
+50003
 String Definition Error
 string does not have closing quotation marks.
-4
+50004
 Malformed Character
 contains more than one character.
-10
+50010
 Memory Allocation Error
 unable to allocate memory.

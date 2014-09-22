@@ -18,7 +18,7 @@ LIT      \"(\\.|[^\\"])*\"
 #include <stdlib.h>
 #include <ctype.h>
 //#include "ytab.h"
-#include "parser.tab.h"
+#include "cparser.tab.h"
 #include "token.h"
 #include "errors.h"
 
@@ -73,7 +73,7 @@ FILE *saved_yyin;
 <COMMENT>"*"+"/"        { BEGIN(0); }
 "//"                    { BEGIN(SCOMMENT); } 
 <COMMENT><<EOF>>        { line_num = com_line_num;
-                          getErrorMessage(COM_CLOSE);
+                          getErrorMessage(ER_COM_CLOSE);
                           lexerr(NULL);
 								  BEGIN(0);
                           popFileStack();
@@ -86,52 +86,72 @@ FILE *saved_yyin;
 \n                      { line_num++; }
 [ \t\f]+                { }
 
+"asm"							{ return createToken(ASM); }
+"auto"						{ return createToken(AUTO); }
 "bool"                  { return createToken(BOOL); }
 "break"                 { return createToken(BREAK); }
 "case"                  { return createToken(CASE); }
+"catch"						{ return createToken(CATCH); }
 "char"                  { return createToken(CHAR); }
 "class"						{ return createToken(CLASS); }
 "const"                 { return createToken(CONST); }
+"const_cast"				{ return createToken(CONST_CAST); }
 "continue"              { return createToken(CONTINUE); }
 "default"               { return createToken(DEFAULT); }
 "delete"                { return createToken(DELETE); }
 "do"                    { return createToken(DO); }
 "double"                { return createToken(DOUBLE); }
+"dynamic_cast"				{ return createToken(DYNAMIC_CAST); }
 "else"                  { return createToken(ELSE); }
 "enum"                  { return createToken(ENUM); }
 "extern"                { return createToken(EXTERN); }
+"explicit"					{ return createToken(EXPLICIT); }
 "float"                 { return createToken(FLOAT); }
+"friend"						{ return createToken(FRIEND); }
 "for"                   { return createToken(FOR); }
 "goto"                  { return createToken(GOTO); }
 "if"                    { return createToken(IF); }
+"inline"						{ return createToken(INLINE); }
 "int"                   { return createToken(INT); }
 "long"                  { return createToken(LONG); }
+"mutable"					{ return createToken(MUTABLE); }
 "new"                   { return createToken(NEW); }
+"operator"					{ return createToken(OPERATOR); }
 "private"					{ return createToken(PRIVATE); }
 "public"						{ return createToken(PUBLIC); }
+"protected"					{ return createToken(PROTECTED); }
 "register"              { return createToken(REGISTER); }
+"reinterpret_cast"		{ return createToken(REINTERPRET_CAST); }
 "return"                { return createToken(RETURN); }
 "short"                 { return createToken(SHORT); }
 "signed"                { return createToken(SIGNED); }
 "sizeof"                { return createToken(SIZEOF); }
 "static"                { return createToken(STATIC); }
+"static_cast"				{ return createToken(STATIC_CAST); }
 "struct"                { StructKeywordSeen = 1; return createToken(STRUCT); }
 "switch"                { return createToken(SWITCH); }
+"template"					{ return createToken(TEMPLATE); }
+"this"						{ return createToken(THIS); }
+"throw"						{ return createToken(THROW); }
+"try"							{ return createToken(TRY); }
 "typedef"               { return createToken(TYPEDEF); }
+"typeid"						{ return createToken(TYPEID); }
+"typename"					{ return createToken(TYPENAME); }
 "union"                 { return createToken(UNION); }
 "unsigned"              { return createToken(UNSIGNED); }
 "void"                  { return createToken(VOID); }
 "volatile"              { return createToken(VOLATILE); }
 "while"                 { return createToken(WHILE); }
-
+"wchar_t"					{ return createToken(WCHAR_T); }
 "using"                 { return createToken(USING); }
+"virtual"					{ return createToken(VIRTUAL); }
 "namespace"             { return createToken(NAMESPACE); }
 
 "true"						{ return createToken(TRUE); }
 "false"						{ return createToken(FALSE); }
 
-"and"                   {return createToken(ANDAND); }
-"or"                    {return createToken(OROR); }
+"and"                   {return createToken(LOG_AND); }
+"or"                    {return createToken(LOG_OR); }
 "not"                   {return createToken(BANG); }
 
 {L}({L}|{D})*           { return createToken(IDENT); }
@@ -140,7 +160,7 @@ FILE *saved_yyin;
 
 "(\\.|[^\\'])+"         { return createToken(CCON); }
 '(\\.|[^\\'])'          { return createToken(CCON); }
-'(\\.|[^\\'])(\\.|[^\\'])+'          { getErrorMessage(MALF_CHAR);
+'(\\.|[^\\'])(\\.|[^\\'])+'          { getErrorMessage(ER_MALF_CHAR);
                                        lexerr(yytext); }
 
 {D}+{FS}?               { return createToken(FCON); }
@@ -148,7 +168,7 @@ FILE *saved_yyin;
 {D}+"."{D}*{FS}?        { return createToken(FCON); }
 
 {LIT}                   { return createToken(STRING); }
-\"(\\.|[^\\"])*         { getErrorMessage(STRING_CLOSE);
+\"(\\.|[^\\"])*         { getErrorMessage(ER_STRING_CLOSE);
                           lexerr(NULL); }
 
 "#include"[ ]*\"[^\\"]+\"  { handle_include(); }
@@ -163,22 +183,25 @@ FILE *saved_yyin;
 "#include <stdlib.h>"   { included_stdlib = 1; }
 "#define"               { return createToken(PDEFINE); }
 
-"::"                    { return createToken(COLONCOLON); }
-"+="                    { return createToken(PLASN); }
-"-="                    { return createToken(MIASN); }
-"*="                    { return createToken(MUASN); }
-"/="                    { return createToken(DIASN); }
-"%="                    { return createToken(MOASN); }
-"&="                    { return createToken(ANASN); }
-"^="                    { return createToken(ERASN); }
-"|="                    { return createToken(ORASN); }
+"->*"							{ return createToken(ARROW_STAR); }
+"..."							{ return createToken(ELLIPSIS); }
+"::"                    { return createToken(SCOPE); }
+".*"							{ return createToken(DOT_STAR); }
+"+="                    { return createToken(ASS_ADD); }
+"-="                    { return createToken(ASS_SUB); }
+"*="                    { return createToken(ASS_MUL); }
+"/="                    { return createToken(ASS_DIV); }
+"%="                    { return createToken(ASS_MOD); }
+"&="                    { return createToken(ASS_AND); }
+"^="                    { return createToken(ASS_XOR); }
+"|="                    { return createToken(ASS_OR); }
 ">>"                    { return createToken(SHR); }
 "<<"                    { return createToken(SHL); }
-"++"                    { return createToken(INCOP); }
-"--"                    { return createToken(DECOP); }
-"->"                    { return createToken(FOLLOW); }
-"&&"                    { return createToken(ANDAND); }
-"||"                    { return createToken(OROR); }
+"++"                    { return createToken(INC); }
+"--"                    { return createToken(DEC); }
+"->"                    { return createToken(ARROW); }
+"&&"                    { return createToken(LOG_AND); }
+"||"                    { return createToken(LOG_OR); }
 "<="                    { return createToken(LE); }
 ">="                    { return createToken(GE); }
 "=="                    { return createToken(EQ); }
@@ -207,7 +230,10 @@ FILE *saved_yyin;
 "^"                     { return createToken(ER); }
 "|"                     { return createToken(OR); }
 "?"                     { return createToken(QUEST); }
-.                       { getErrorMessage(UNREC_TOKEN);
+"@"							{ return createToken(AT); }
+"$"							{ return createToken(DOLLAR); }	
+"#"							{ return createToken(POUND); }
+.                       { getErrorMessage(ER_UNREC_TOKEN);
                           lexerr(yytext); }
 
 <<EOF>>                 { popFileStack();

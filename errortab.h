@@ -5,8 +5,8 @@
  * contains the definitions for error handler
  */
 
-#define UNREC_TOKEN 1
-#define COM_CLOSE 2
-#define STRING_CLOSE 3
-#define MALF_CHAR 4
-#define MALLOC_E 10
+#define ER_UNREC_TOKEN 50001
+#define ER_COM_CLOSE 50002
+#define ER_STRING_CLOSE 50003
+#define ER_MALF_CHAR 50004
+#define ER_MALLOC_E 50010

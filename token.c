@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include "token.h"
 //#include "ytab.h"
-#include "parser.tab.h"
+#include "cparser.tab.h"
 
 /*
  * handles the escape items in a string of text

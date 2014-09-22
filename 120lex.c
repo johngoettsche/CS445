@@ -10,7 +10,7 @@
 
 
 void memoryError(){
-	getErrorMessage(MALLOC_E);
+	getErrorMessage(ER_MALLOC_E);
 	yyerror(NULL);
 	exit(1);
 }
@@ -37,7 +37,7 @@ int main(int argc, char **argv){
 				exit(1);
 			}
 			//create all tokens in file
-			while(yytoken = yylex()){
+			while(yytoken = (Token *)yylex()){
 				if(current->t == NULL)current->t = yytoken;
 				else{
 					TokenList *item = (TokenList *)calloc(1, sizeof(TokenList));
