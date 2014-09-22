@@ -17,7 +17,6 @@ LIT      \"(\\.|[^\\"])*\"
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-//#include "ytab.h"
 #include "cparser.tab.h"
 #include "token.h"
 #include "errors.h"

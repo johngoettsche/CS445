@@ -1,8 +1,8 @@
 CC = gcc
 CFLAGS = -c -r
 
-120++ : cparser.tab.o lex.yy.o token.o errors.o 120lex.o 
-	$(CC) -o 120++ cparser.tab.o lex.yy.o token.o errors.o 120lex.o
+120++ : cparser.tab.o lex.yy.o token.o errors.o 120lex.o 120parse.o
+	$(CC) -o 120++ cparser.tab.o lex.yy.o token.o errors.o 120lex.o 120parse.o
 
 token.o : token.c
 	$(CC) $(CFLAGS) token.c

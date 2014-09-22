@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include "errors.h"
 #include "token.h"
+#include "120parse.h"
 
 #define false 0
 #define true 1
@@ -259,7 +260,7 @@ id:
    | template_id 
 	
 template_test:                      
-	LT             /* Queue '+' or '-' < as follow on */       { template_test(); }
+	LT             /* Queue '+' or '-' < as follow on */       { /*template_test();*/ }
 	
 global_scope:                       
 	SCOPE
@@ -393,11 +394,12 @@ primary_expression:
 	literal
    | THIS
    | suffix_decl_specified_ids
-/*  |                               SCOPE identifier                                            -- covered by suffix_decl_specified_ids */
-/*  |                               SCOPE operator_function_id                                  -- covered by suffix_decl_specified_ids */
-/*  |                               SCOPE qualified_id                                          -- covered by suffix_decl_specified_ids */
-   | abstract_expression               %prec REDUCE_HERE_MOSTLY  /* Prefer binary to unary ops, cast to call */
-/*  |                               id_expression                                               -- covered by suffix_decl_specified_ids */
+/* | SCOPE identifier                                            -- covered by suffix_decl_specified_ids */
+/* | SCOPE operator_function_id                                  -- covered by suffix_decl_specified_ids */
+/* | SCOPE qualified_id                                          -- covered by suffix_decl_specified_ids */
+   | abstract_expression            %prec REDUCE_HERE_MOSTLY  /* Prefer binary to unary ops, cast to call */
+/* | id_expression                                               -- covered by suffix_decl_specified_ids */
+
 /*
  *  Abstract-expression covers the () and [] of abstract-declarators.
  */
@@ -416,18 +418,18 @@ type1_parameters:
    | /*----*/    type1_parameters parameter_declaration_list SM
 	
 mark_type1:                         
-	/* empty */                                             { mark_type1(); yyclearin; }
+	/* empty */                                             { /*mark_type1(); yyclearin;*/ }
 	
 postfix_expression:                 
 	primary_expression
 /* | /++++++/    postfix_expression parenthesis_clause */
    | /*----*/    postfix_expression parenthesis_clause mark_type1 MINUS
    | /*----*/    postfix_expression parenthesis_clause mark_type1 PLUS type1_parameters mark LC error 
-     /*----*/                    { yyerrok; yyclearin; remark_type1(); unmark(); unmark(); }
+     /*----*/                    { /*yyerrok; yyclearin; remark_type1(); unmark(); unmark(); */}
    | /*----*/    postfix_expression parenthesis_clause mark_type1 PLUS type1_parameters mark error 
-     /*----*/                    { yyerrok; yyclearin; remark_type1(); unmark(); unmark(); }
+     /*----*/                    { /*yyerrok; yyclearin; remark_type1(); unmark(); unmark();*/}
    | /*----*/    postfix_expression parenthesis_clause mark_type1 PLUS error
-     /*----*/                    { yyerrok; yyclearin; remark_type1(); unmark(); }
+     /*----*/                    { /*yyerrok; yyclearin; remark_type1(); unmark(); */}
    | postfix_expression LB expression.opt RB
 /* | destructor_id LB expression.opt RB                    -- not semantically valid */
 /* | destructor_id parenthesis_clause                        -- omitted to resolve known ambiguity */
@@ -448,123 +450,180 @@ postfix_expression:
 /* | TYPEID LP expression RP                               -- covered by parameters_clause */
 /* | TYPEID LP type_id RP                                  -- covered by parameters_clause */
 
-expression_list.opt:                /* empty */
-    |                               expression_list
-expression_list:                    assignment_expression
-    |                               expression_list CM assignment_expression
+expression_list.opt:                
+	/* empty */
+   | expression_list
+	
+expression_list:                    
+	assignment_expression
+   | expression_list CM assignment_expression
 
-unary_expression:                   postfix_expression
-    |                               INC cast_expression
-    |                               DEC cast_expression
-    |                               ptr_operator cast_expression
-/*  |                               MUL cast_expression                                     -- covered by ptr_operator */
-/*  |                               AND cast_expression                                     -- covered by ptr_operator */
-/*  |                               decl_specifier_seq MUL cast_expression                  -- covered by binary operator */
-/*  |                               decl_specifier_seq AND cast_expression                  -- covered by binary operator */
-    |                               suffix_decl_specified_scope star_ptr_operator cast_expression   /* covers e.g int ::type::* const t = 4 */
+unary_expression:                   
+	postfix_expression
+   | INC cast_expression
+   | DEC cast_expression
+   | ptr_operator cast_expression
+/* | MUL cast_expression                                     -- covered by ptr_operator */
+/* | AND cast_expression                                     -- covered by ptr_operator */
+/* | decl_specifier_seq MUL cast_expression                  -- covered by binary operator */
+/* | decl_specifier_seq AND cast_expression                  -- covered by binary operator */
+   | suffix_decl_specified_scope star_ptr_operator cast_expression   /* covers e.g int ::type::* const t = 4 */
+	| PLUS cast_expression
+   | MINUS cast_expression
+   | BANG cast_expression
+   | NOT cast_expression
+   | SIZEOF unary_expression
+/* | SIZEOF LP type_id RP                                  -- covered by unary_expression */
+   | new_expression
+   | global_scope new_expression
+   | delete_expression
+   | global_scope delete_expression
+/* | DELETE LB RB cast_expression       -- covered by DELETE cast_expression since cast_expression covers ... */
+/* | SCOPE DELETE LB RB cast_expression //  ... abstract_expression cast_expression and so [] cast_expression */
 
-    |                               PLUS cast_expression
-    |                               MINUS cast_expression
-    |                               BANG cast_expression
-    |                               NOT cast_expression
-    |                               SIZEOF unary_expression
-/*  |                               SIZEOF LP type_id RP                                  -- covered by unary_expression */
-    |                               new_expression
-    |                               global_scope new_expression
-    |                               delete_expression
-    |                               global_scope delete_expression
-/*  |                               DELETE LB RB cast_expression       -- covered by DELETE cast_expression since cast_expression covers ... */
-/*  |                               SCOPE DELETE LB RB cast_expression //  ... abstract_expression cast_expression and so [] cast_expression */
+delete_expression:                  
+	DELETE cast_expression                                  /* also covers DELETE[] cast_expression */
 
-delete_expression:                  DELETE cast_expression                                  /* also covers DELETE[] cast_expression */
+new_expression:                     
+	NEW new_type_id new_initializer.opt
+   | NEW parameters_clause new_type_id new_initializer.opt
+   | NEW parameters_clause
+/* | NEW LP type-id RP                                 -- covered by parameters_clause */
+   | NEW parameters_clause parameters_clause new_initializer.opt
+/* | NEW LP type-id RP new_initializer                 -- covered by parameters_clause parameters_clause */
+/* | NEW parameters_clause LP type-id RP               -- covered by parameters_clause parameters_clause */
 
-new_expression:                     NEW new_type_id new_initializer.opt
-    |                               NEW parameters_clause new_type_id new_initializer.opt
-    |                               NEW parameters_clause
-/*  |                               NEW LP type-id RP                                     -- covered by parameters_clause */
-    |                               NEW parameters_clause parameters_clause new_initializer.opt
-/*  |                               NEW LP type-id RP new_initializer                     -- covered by parameters_clause parameters_clause */
-/*  |                               NEW parameters_clause LP type-id RP                   -- covered by parameters_clause parameters_clause */
-                                                                                /* ptr_operator_seq.opt production reused to save a %prec */
-new_type_id:                        type_specifier ptr_operator_seq.opt
-    |                               type_specifier new_declarator
-    |                               type_specifier new_type_id
-new_declarator:                     ptr_operator new_declarator
-    |                               direct_new_declarator
-direct_new_declarator:              LB expression RB
-    |                               direct_new_declarator LB constant_expression RB
-new_initializer.opt:                /* empty */
-    |                               LP expression_list.opt RP
+/* ptr_operator_seq.opt production reused to save a %prec */
+new_type_id:                        
+	type_specifier ptr_operator_seq.opt
+   | type_specifier new_declarator
+   | type_specifier new_type_id
+	
+new_declarator:                     
+	ptr_operator new_declarator
+   | direct_new_declarator
+	
+direct_new_declarator:              
+	LB expression RB
+   | direct_new_declarator LB constant_expression RB
+new_initializer.opt:                
+	/* empty */
+   | LP expression_list.opt RP
 
 /*  cast-expression is generalised to support a [] as well as a () prefix. This covers the omission of DELETE[] which when
  *  followed by a parenthesised expression was ambiguous. It also covers the gcc indexed array initialisation for free.
  */
-cast_expression:                    unary_expression
-    |                               abstract_expression cast_expression
-/*  |                               LP type_id RP cast_expression                             -- covered by abstract_expression */
+cast_expression:                    
+	unary_expression
+   | abstract_expression cast_expression
+/* | LP type_id RP cast_expression                             -- covered by abstract_expression */
 
-pm_expression:                      cast_expression
-    |                               pm_expression DOT_STAR cast_expression
-    |                               pm_expression ARROW_STAR cast_expression
-multiplicative_expression:          pm_expression
-    |                               multiplicative_expression star_ptr_operator pm_expression
-    |                               multiplicative_expression DIV pm_expression
-    |                               multiplicative_expression MOD pm_expression
-additive_expression:                multiplicative_expression
-    |                               additive_expression PLUS multiplicative_expression
-    |                               additive_expression MINUS multiplicative_expression
-shift_expression:                   additive_expression
-    |                               shift_expression SHL additive_expression
-    |                               shift_expression SHR additive_expression
-relational_expression:              shift_expression
-    |                               relational_expression LT shift_expression
-    |                               relational_expression GT shift_expression
-    |                               relational_expression LE shift_expression
-    |                               relational_expression GE shift_expression
-equality_expression:                relational_expression
-    |                               equality_expression EQ relational_expression
-    |                               equality_expression NE relational_expression
-and_expression:                     equality_expression
-    |                               and_expression AND equality_expression
-exclusive_or_expression:            and_expression
-    |                               exclusive_or_expression ER and_expression
-inclusive_or_expression:            exclusive_or_expression
-    |                               inclusive_or_expression OR exclusive_or_expression
-logical_and_expression:             inclusive_or_expression
-    |                               logical_and_expression LOG_AND inclusive_or_expression
-logical_or_expression:              logical_and_expression
-    |                               logical_or_expression LOG_OR logical_and_expression
-conditional_expression:             logical_or_expression
-    |                               logical_or_expression QUEST expression COLON assignment_expression
-
+pm_expression:                      
+	cast_expression
+   | pm_expression DOT_STAR cast_expression
+   | pm_expression ARROW_STAR cast_expression
+	
+multiplicative_expression:          
+	pm_expression
+   | multiplicative_expression star_ptr_operator pm_expression
+   | multiplicative_expression DIV pm_expression
+   | multiplicative_expression MOD pm_expression
+	
+additive_expression:                
+	multiplicative_expression
+   | additive_expression PLUS multiplicative_expression
+   | additive_expression MINUS multiplicative_expression
+	
+shift_expression:                   
+	additive_expression
+   | shift_expression SHL additive_expression
+   | shift_expression SHR additive_expression
+	
+relational_expression:              
+	shift_expression
+   | relational_expression LT shift_expression
+   | relational_expression GT shift_expression
+   | relational_expression LE shift_expression
+   | relational_expression GE shift_expression
+	
+equality_expression:                
+	relational_expression
+   | equality_expression EQ relational_expression
+   | equality_expression NE relational_expression
+	
+and_expression:                     
+	equality_expression
+   | and_expression AND equality_expression
+	
+exclusive_or_expression:            
+	and_expression
+   | exclusive_or_expression ER and_expression
+	
+inclusive_or_expression:            
+	exclusive_or_expression
+   | inclusive_or_expression OR exclusive_or_expression
+	
+logical_and_expression:             
+	inclusive_or_expression
+   | logical_and_expression LOG_AND inclusive_or_expression
+	
+logical_or_expression:              
+	logical_and_expression
+   | logical_or_expression LOG_OR logical_and_expression
+	
+conditional_expression:             
+	logical_or_expression
+   | logical_or_expression QUEST expression COLON assignment_expression
 
 /*  assignment-expression is generalised to cover the simple assignment of a braced initializer in order to contribute to the
  *  coverage of parameter-declaration and init-declaration.
  */
-assignment_expression:              conditional_expression
-    |                               logical_or_expression assignment_operator assignment_expression
-    |                               logical_or_expression ASN braced_initializer
-    |                               throw_expression
-assignment_operator:                ASN | ASS_ADD | ASS_AND | ASS_DIV | ASS_MOD | ASS_MUL | ASS_OR | ASS_SHL | ASS_SHR | ASS_SUB | ASS_XOR
+assignment_expression:              
+	conditional_expression
+   | logical_or_expression assignment_operator assignment_expression
+   | logical_or_expression ASN braced_initializer
+   | throw_expression
+	
+assignment_operator:                
+	ASN 
+	| ASS_ADD 
+	| ASS_AND 
+	| ASS_DIV 
+	| ASS_MOD 
+	| ASS_MUL 
+	| ASS_OR 
+	| ASS_SHL 
+	| ASS_SHR 
+	| ASS_SUB 
+	| ASS_XOR
 
 /*  expression is widely used and usually single-element, so the reductions are arranged so that a
  *  single-element expression is returned as is. Multi-element expressions are parsed as a list that
  *  may then behave polymorphically as an element or be compacted to an element. */ 
-expression.opt:                     /* empty */
-    |                               expression
-expression:                         assignment_expression
-    |                               expression_list CM assignment_expression
-constant_expression:                conditional_expression
+expression.opt:                     
+	/* empty */
+   | expression
+	
+expression:                         
+	assignment_expression
+   | expression_list CM assignment_expression
+	
+constant_expression:                
+	conditional_expression
 
 /*  The grammar is repeated for when the parser stack knows that the next > must end a template.
  */
-templated_relational_expression:    shift_expression
-    |                               templated_relational_expression LT shift_expression
-    |                               templated_relational_expression LE shift_expression
-    |                               templated_relational_expression GE shift_expression
-templated_equality_expression:      templated_relational_expression
-    |                               templated_equality_expression EQ templated_relational_expression
-    |                               templated_equality_expression NE templated_relational_expression
+templated_relational_expression:    
+	shift_expression
+   | templated_relational_expression LT shift_expression
+   | templated_relational_expression LE shift_expression
+   | templated_relational_expression GE shift_expression
+	
+templated_equality_expression:      
+	templated_relational_expression
+   | templated_equality_expression EQ templated_relational_expression
+   | templated_equality_expression NE templated_relational_expression
+	
 templated_and_expression:           templated_equality_expression
     |                               templated_and_expression AND templated_equality_expression
 templated_exclusive_or_expression:  templated_and_expression
@@ -597,7 +656,7 @@ templated_expression_list:          templated_assignment_expression
  *---------------------------------------------------------------------------------------------------
  *  Parsing statements is easy once simple_declaration has been generalised to cover expression_statement.
  */
-looping_statement:                  start_search looped_statement                               { end_search(); }
+looping_statement:                  start_search looped_statement                               { /*end_search(); */}
 looped_statement:                   statement
     |                               advance_search PLUS looped_statement
     |                               advance_search MINUS
@@ -615,10 +674,10 @@ labeled_statement:                  identifier COLON looping_statement
     |                               DEFAULT COLON looping_statement
 /*expression_statement:             expression.opt SM                                          -- covered by declaration_statement */
 compound_statement:                 LC statement_seq.opt RC
-    |                               LC statement_seq.opt looping_statement POUND bang error RC  { UNBANG("Bad statement-seq."); }
+    |                               LC statement_seq.opt looping_statement POUND bang error RC  { /*UNBANG("Bad statement-seq."); */}
 statement_seq.opt:                  /* empty */
     |                               statement_seq.opt looping_statement
-    |                               statement_seq.opt looping_statement POUND bang error SM      { UNBANG("Bad statement."); }
+    |                               statement_seq.opt looping_statement POUND bang error SM      { /*UNBANG("Bad statement.");*/ }
 /*
  *  The dangling else conflict is resolved to the innermost if.
  */
@@ -645,13 +704,13 @@ declaration_statement:              block_declaration
 /*---------------------------------------------------------------------------------------------------
  * A.6 Declarations
  *---------------------------------------------------------------------------------------------------*/
-compound_declaration:               LC nest declaration_seq.opt RC                            { unnest(); }
+compound_declaration:               LC nest declaration_seq.opt RC                            {/* unnest(); */}
     |                               LC nest declaration_seq.opt util looping_declaration POUND bang error RC
-                                                                                                { unnest(); UNBANG("Bad declaration-seq."); }
+                                                                                                { /*unnest(); UNBANG("Bad declaration-seq.");*/ }
 declaration_seq.opt:                /* empty */
     |                               declaration_seq.opt util looping_declaration
-    |                               declaration_seq.opt util looping_declaration POUND bang error SM { UNBANG("Bad declaration."); }
-looping_declaration:                start_search1 looped_declaration                            { end_search(); }
+    |                               declaration_seq.opt util looping_declaration POUND bang error SM { /*UNBANG("Bad declaration."); */}
+looping_declaration:                start_search1 looped_declaration                            { /*end_search(); */}
 looped_declaration:                 declaration
     |                               advance_search PLUS looped_declaration
     |                               advance_search MINUS
@@ -762,11 +821,11 @@ enumerator_clause:                  LC enumerator_list_ecarb
     |                               LC enumerator_list enumerator_list_ecarb
     |                               LC enumerator_list CM enumerator_definition_ecarb
 enumerator_list_ecarb:              RC
-    |                               bang error RC                                              { UNBANG("Bad enumerator-list."); }
+    |                               bang error RC                                              {/* UNBANG("Bad enumerator-list.");*/ }
 enumerator_definition_ecarb:        RC
-    |                               bang error RC                                              { UNBANG("Bad enumerator-definition."); }
+    |                               bang error RC                                              { /*UNBANG("Bad enumerator-definition.");*/ }
 enumerator_definition_filler:       /* empty */
-    |                               bang error CM                                              { UNBANG("Bad enumerator-definition."); }
+    |                               bang error CM                                              { /*UNBANG("Bad enumerator-definition.");*/ }
 enumerator_list_head:               enumerator_definition_filler
     |                               enumerator_list CM enumerator_definition_filler
 enumerator_list:                    enumerator_list_head enumerator_definition
@@ -899,12 +958,12 @@ initializer_clause:                 assignment_expression
 braced_initializer:                 LC initializer_list RC
     |                               LC initializer_list CM RC
     |                               LC RC
-    |                               LC looping_initializer_clause POUND bang error RC           { UNBANG("Bad initializer_clause."); }
+    |                               LC looping_initializer_clause POUND bang error RC           {/* UNBANG("Bad initializer_clause."); */}
     |                               LC initializer_list CM looping_initializer_clause POUND bang error RC
-                                                                                                { UNBANG("Bad initializer_clause."); }
+                                                                                                {/* UNBANG("Bad initializer_clause."); */}
 initializer_list:                   looping_initializer_clause
     |                               initializer_list CM looping_initializer_clause
-looping_initializer_clause:         start_search looped_initializer_clause                      { end_search(); }
+looping_initializer_clause:         start_search looped_initializer_clause                      {/* end_search(); */}
 looped_initializer_clause:          initializer_clause
     |                               advance_search PLUS looped_initializer_clause
     |                               advance_search MINUS
@@ -922,22 +981,22 @@ looped_initializer_clause:          initializer_clause
  *  the correct choice so we unmark and continue. If we fail to find the { an error token causes back-tracking
  *  to the alternative parse in elaborated_type_specifier which regenerates the : and declares unconditional success.
  */
-colon_mark:                         COLON                                                         { mark(); }
+colon_mark:                         COLON                                                         {/* mark(); */}
 elaborated_class_specifier:         class_key scoped_id                    %prec SHIFT_THERE
-    |                               class_key scoped_id colon_mark error                        { rewind_colon(); }
-class_specifier_head:               class_key scoped_id colon_mark base_specifier_list LC      { unmark(); }
+    |                               class_key scoped_id colon_mark error                        {/* rewind_colon();*/ }
+class_specifier_head:               class_key scoped_id colon_mark base_specifier_list LC      { /*unmark();*/ }
     |                               class_key COLON base_specifier_list LC
     |                               class_key scoped_id LC
     |                               class_key LC
 class_key:                          CLASS | STRUCT | UNION
 class_specifier:                    class_specifier_head member_specification.opt RC
     |                               class_specifier_head member_specification.opt util looping_member_declaration POUND bang error RC
-                                            { UNBANG("Bad member_specification.opt."); }
+                                            { /*UNBANG("Bad member_specification.opt."); */}
 member_specification.opt:           /* empty */
     |                               member_specification.opt util looping_member_declaration
     |                               member_specification.opt util looping_member_declaration POUND bang error SM
-                                                                                                { UNBANG("Bad member-declaration."); }
-looping_member_declaration:         start_search looped_member_declaration                      { end_search(); }
+                                                                                                { /*UNBANG("Bad member-declaration."); */}
+looping_member_declaration:         start_search looped_member_declaration                      {/* end_search(); */}
 looped_member_declaration:          member_declaration
     |                               advance_search PLUS looped_member_declaration
     |                               advance_search MINUS
@@ -1002,11 +1061,11 @@ conversion_type_id:                 type_specifier ptr_operator_seq.opt
 ctor_initializer.opt:               /* empty */
     |                               ctor_initializer
 ctor_initializer:                   COLON mem_initializer_list
-    |                               COLON mem_initializer_list bang error                         { UNBANG("Bad ctor-initializer."); }
+    |                               COLON mem_initializer_list bang error                         {/* UNBANG("Bad ctor-initializer."); */}
 mem_initializer_list:               mem_initializer
     |                               mem_initializer_list_head mem_initializer
 mem_initializer_list_head:          mem_initializer_list CM
-    |                               mem_initializer_list bang error CM                         { UNBANG("Bad mem-initializer."); }
+    |                               mem_initializer_list bang error CM                         {/* UNBANG("Bad mem-initializer.");*/ }
 mem_initializer:                    mem_initializer_id LP expression_list.opt RP
 mem_initializer_id:                 scoped_id
 
@@ -1081,7 +1140,7 @@ template_parameter:                 simple_type_parameter
     |                               templated_type_parameter
     |                               templated_type_parameter ASN identifier
     |                               templated_parameter_declaration
-    |                               bang error                                                  { UNBANG("Bad template-parameter."); }
+    |                               bang error                                                  {/* UNBANG("Bad template-parameter."); */}
 simple_type_parameter:              CLASS
 /*  |                               CLASS identifier                                            -- covered by parameter_declaration */
     |                               TYPENAME
@@ -1129,12 +1188,12 @@ type_id_list:                       type_id
 /*---------------------------------------------------------------------------------------------------
  * Back-tracking and context support
  *---------------------------------------------------------------------------------------------------*/
-advance_search:                     error               { yyerrok; yyclearin; advance_search(); } /* Rewind and queue '+' or '-' '#' */       
-bang:                               /* empty */         { suppress_parse_error = 1; }   /* set flag to suppress "parse error" */ 
-mark:                               /* empty */         { mark(); }        /* Push lookahead and input token stream context onto a stack */
-nest:                               /* empty */         { nest(); }        /* Push a declaration nesting depth onto the parse stack */
-start_search:                       /* empty */         { start_search(false); }    /* Create/reset binary search context */
-start_search1:                      /* empty */         { start_search(true); }     /* Create/reset binary search context */
+advance_search:                     error               {/* yyerrok; yyclearin; advance_search(); */} /* Rewind and queue '+' or '-' '#' */       
+bang:                               /* empty */         {/* suppress_parse_error = 1; */}   /* set flag to suppress "parse error" */ 
+mark:                               /* empty */         {/* mark(); */}        /* Push lookahead and input token stream context onto a stack */
+nest:                               /* empty */         {/* nest(); */}        /* Push a declaration nesting depth onto the parse stack */
+start_search:                       /* empty */         {/* start_search(false); */}    /* Create/reset binary search context */
+start_search1:                      /* empty */         {/* start_search(true); */}     /* Create/reset binary search context */
 util:                               /* empty */           /* Get current utility mode */
 
 %%

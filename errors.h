@@ -5,10 +5,11 @@
  * defines ErrorMessage structure
  */
 
+#include <string.h>
 #include <stdlib.h> 
 #include <stdio.h>
 #include "errortab.h"
-
+ 
 typedef struct ErrorMessage ErrorMessage;
 struct ErrorMessage{
    int number;

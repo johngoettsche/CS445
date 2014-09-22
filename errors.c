@@ -7,6 +7,12 @@
  
 #include "errors.h" 
 
+void memoryError(){
+	getErrorMessage(ER_MALLOC_E);
+	yyerror(NULL);
+	exit(1);
+}
+
 void getErrorMessage(int ecode){
    int size = 1024;
    int code;

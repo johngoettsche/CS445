@@ -8,13 +8,13 @@
 #include "120lex.h"
 #include "errors.h"
 
-
+/*
 void memoryError(){
 	getErrorMessage(ER_MALLOC_E);
 	yyerror(NULL);
 	exit(1);
-}
-
+}*/
+/*
 int main(int argc, char **argv){
 	yytoken = (Token *)calloc(1, sizeof(Token));
 	//create token list
@@ -59,4 +59,4 @@ int main(int argc, char **argv){
 	
    printAllTokens(head);
    return 0;
-}
+}*/
