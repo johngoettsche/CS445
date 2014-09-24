@@ -26,7 +26,7 @@
 #include "120parse.h"
 #include "parsedef.h"
 
-struct node * alacnary(int, int, int,...);
+struct TreeNode * alacnary(int, int, int,...);
 
 extern int line_num;
 int suppress_parse_error = 0;
@@ -34,8 +34,8 @@ int suppress_parse_error = 0;
 %}
 
 %union{
-	struct token *t;
-	struct node *n;
+	struct Token *t;
+	struct TreeNode *n;
 };
 
 %token <t> PLUS MINUS MUL DIV MOD ER AND OR NOT BANG LT GT ASN COLON LB RB LC RC LP RP
@@ -95,6 +95,43 @@ int suppress_parse_error = 0;
 //%term <integer_literal> IntegerLiteral
 //%term <number_literal> NumberLiteral  ** NOT USED LATER **
 //%term <string_literal> StringLiteral
+
+%type <n> identifier id template_test global_scope id_scope nested_id scoped_id destructor_id special_function_id nested_special_function_id 
+%type <n> scoped_special_function_id declarator_id built_in_type_id pseudo_destructor_id nested_pseudo_destructor_id scoped_pseudo_destructor_id
+%type <n> string literal boolean_literal translation_unit primary_expression abstract_expression type1_parameters mark_type1
+%type <n> postfix_expression expression_list.opt expression_list unary_expression delete_expression new_expression new_type_id
+%type <n> new_declarator direct_new_declarator new_initializer.opt cast_expression pm_expression multiplicative_expression
+%type <n> additive_expression shift_expression relational_expression equality_expression and_expression exclusive_or_expression
+%type <n> inclusive_or_expression logical_and_expression logical_or_expression conditional_expression assignment_expression
+%type <n> assignment_operator expression.opt expression constant_expression templated_relational_expression 
+%type <n> templated_equality_expression templated_and_expression templated_exclusive_or_expression templated_inclusive_or_expression
+%type <n> templated_logical_and_expression templated_logical_or_expression templated_conditional_expression templated_assignment_expression
+%type <n> templated_expression templated_expression_list looping_statement looped_statement statement control_statement labeled_statement
+%type <n> compound_statement statement_seq.opt selection_statement condition.opt condition iteration_statement for_init_statement
+%type <n> jump_statement declaration_statement compound_declaration declaration_seq.opt looping_declaration looped_declaration
+%type <n> declaration specialised_declaration block_declaration specialised_block_declaration simple_declaration 
+%type <n> suffix_built_in_decl_specifier.raw suffix_built_in_decl_specifier suffix_named_decl_specifier suffix_named_decl_specifier.bi
+%type <n> suffix_named_decl_specifiers suffix_named_decl_specifiers.sf suffix_decl_specified_ids suffix_decl_specified_scope
+%type <n> decl_specifier_affix decl_specifier_suffix decl_specifier_prefix storage_class_specifier function_specifier
+%type <n> type_specifier elaborate_type_specifier simple_type_specifier built_in_type_specifier elaborated_type_specifier
+%type <n> elaborated_enum_specifier enum_specifier enumerator_clause enumerator_list_ecarb enumerator_definition_ecarb enumerator_definition_filler
+%type <n> enumerator_list_head enumerator_list enumerator_definition enumerator namespace_definition namespace_alias_definition
+%type <n> using_declaration using_directive asm_definition linkage_specification init_declarations init_declaration star_ptr_operator
+%type <n> nested_ptr_operator ptr_operator ptr_operator_seq ptr_operator_seq.opt cv_qualifier_seq.opt cv_qualifier type_id
+%type <n> abstract_declarator.opt direct_abstract_declarator.opt direct_abstract_declarator parenthesis_clause parameters_clause
+%type <n> parameter_declaration_clause parameter_declaration_list abstract_pointer_declaration abstract_parameter_declaration
+%type <n> special_parameter_declaration parameter_declaration templated_parameter_declaration templated_abstract_declaration
+%type <n> function_definition func_definition ctor_definition constructor_head function_try_block function_block function_body
+%type <n> initializer_clause braced_initializer initializer_list looping_initializer_clause looped_initializer_clause colon_mark
+%type <n> elaborated_class_specifier class_specifier_head class_key class_specifier member_specification.opt looping_member_declaration
+%type <n> looped_member_declaration member_declaration simple_member_declaration member_init_declarations member_init_declaration
+%type <n> accessibility_specifier bit_field_declaration bit_field_width bit_field_init_declaration base_specifier_list base_specifier
+%type <n> access_specifier conversion_function_id conversion_type_id ctor_initializer.opt ctor_initializer mem_initializer_list
+%type <n> mem_initializer_list_head mem_initializer mem_initializer_id operator_function_id operator template_declaration template_parameter_clause
+%type <n> template_parameter_list template_parameter simple_type_parameter templated_type_parameter template_id template_argument_list
+%type <n> template_argument explicit_specialization try_block handler_seq handler exception_declaration throw_expression templated_throw_expression
+%type <n> exception_specification type_id_list advance_search bang mark nest start_search start_search1 util
+
 /*
  *  The lexer need not treat '0' as distinct from IntegerLiteral in the hope that pure-specifier can
  *  be distinguished, It isn't. Semantic rescue from = constant-expression is necessary.
@@ -363,7 +400,7 @@ boolean_literal:
  *---------------------------------------------------------------------------------------------------*/
 translation_unit:                   
 	declaration_seq.opt														{ $$ = alacnary(S_TRANSLATION_UNIT, TRANSLATION_UNITr1, 1, $1); }
-
+;
 /*---------------------------------------------------------------------------------------------------
  * A.4 Expressions
  *---------------------------------------------------------------------------------------------------
@@ -404,7 +441,7 @@ primary_expression:
    | abstract_expression            									{ $$ = alacnary(S_PRIMARY_EXPRESSION, PRIMARY_EXPRESSIONr4, 1, $1); }
 																					/*%prec REDUCE_HERE_MOSTLY  /* Prefer binary to unary ops, cast to call */
 /* | id_expression                                               -- covered by suffix_decl_specified_ids */
-
+;
 /*
  *  Abstract-expression covers the () and [] of abstract-declarators.
  */
@@ -412,7 +449,7 @@ abstract_expression:
 	parenthesis_clause														{ $$ = alacnary(S_ABSTRACT_EXPRESSION, ABSTRACT_EXPRESSIONr1, 1, $1); }
    | LB expression.opt RB													{ $$ = alacnary(S_ABSTRACT_EXPRESSION, ABSTRACT_EXPRESSIONr2, 3, $1, $2, $3); }
    | TEMPLATE abstract_expression										{ $$ = alacnary(S_ABSTRACT_EXPRESSION, ABSTRACT_EXPRESSIONr3, 2, $1, $2); }
-
+;
 /*  Type I function parameters are ambiguous with respect to the generalised name, so we have to do a lookahead following
  *  any function-like parentheses. This unfortunately hits normal code, so kill the -- lines and add the ++ lines for efficiency.
  *  Supporting Type I code under the superset causes perhaps 25% of lookahead parsing. Sometimes complete class definitions
@@ -421,10 +458,10 @@ abstract_expression:
 type1_parameters:       
 	/*----*/    parameter_declaration_list SM							{ $$ = alacnary(S_TYPE1_PARAMETERS, TYPE1_PARAMETERSr1, 2, $1, $2); }
    | /*----*/    type1_parameters parameter_declaration_list SM { $$ = alacnary(S_TYPE1_PARAMETERS, TYPE1_PARAMETERSr2, 3, $1, $2, $3); }
-	
+;	
 mark_type1:                         
 	/* empty */                                             { /*mark_type1(); yyclearin;*/ }
-	
+;	
 postfix_expression:                 
 	primary_expression
 /* | /++++++/    postfix_expression parenthesis_clause */
@@ -455,15 +492,15 @@ postfix_expression:
    | TYPEID parameters_clause												{ $$ = alacnary(S_POSTFIX_EXPRESSION, POSTFIX_EXPRESSIONr13, 2, $1, $2); }
 /* | TYPEID LP expression RP                               -- covered by parameters_clause */
 /* | TYPEID LP type_id RP                                  -- covered by parameters_clause */
-
+;
 expression_list.opt:                
-	/* empty */																	{ $$ = $1; }
+	/* empty */																	{  }
    | expression_list															{ $$ = alacnary(S_EXPRESSION_LIST_OPT, EXPRESSION_LIST_OPTr1, 1, $1); }
-	
+;	
 expression_list:                    
 	assignment_expression													{ $$ = alacnary(S_EXPRESSION_LIST, EXPRESSION_LISTr1, 1, $1); }
    | expression_list CM assignment_expression						{ $$ = alacnary(S_EXPRESSION_LIST, EXPRESSION_LISTr2, 3, $1, $2, $3); }
-
+;
 unary_expression:                   
 	postfix_expression														{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr1, 1, $1); }
    | INC cast_expression													{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr2, 2, $1, $2); }
@@ -488,225 +525,275 @@ unary_expression:
    | global_scope delete_expression										{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr14, 2, $1, $2); }
 /* | DELETE LB RB cast_expression       -- covered by DELETE cast_expression since cast_expression covers ... */
 /* | SCOPE DELETE LB RB cast_expression //  ... abstract_expression cast_expression and so [] cast_expression */
-
+;
 delete_expression:                  
-	DELETE cast_expression                                  /* also covers DELETE[] cast_expression */
-
+	DELETE cast_expression                                  		{ $$ = alacnary(S_DELETE_EXPRESSION, DELETE_EXPRESSIONr1, 1, $1); }/* also covers DELETE[] cast_expression */
+;
 new_expression:                     
-	NEW new_type_id new_initializer.opt
-   | NEW parameters_clause new_type_id new_initializer.opt
-   | NEW parameters_clause
+	NEW new_type_id new_initializer.opt									{ $$ = alacnary(S_NEW_EXPRESSION, NEW_EXPRESSIONr1, 3, $1, $2, $3); }
+   | NEW parameters_clause new_type_id new_initializer.opt		{ $$ = alacnary(S_NEW_EXPRESSION, NEW_EXPRESSIONr2, 4, $1, $2, $3, $4); }
+   | NEW parameters_clause													{ $$ = alacnary(S_NEW_EXPRESSION, NEW_EXPRESSIONr3, 2, $1, $2); }
 /* | NEW LP type-id RP                                 -- covered by parameters_clause */
-   | NEW parameters_clause parameters_clause new_initializer.opt
+   | NEW parameters_clause parameters_clause new_initializer.opt	{ $$ = alacnary(S_NEW_EXPRESSION, NEW_EXPRESSIONr4, 4, $1, $2, $3, $4); }
 /* | NEW LP type-id RP new_initializer                 -- covered by parameters_clause parameters_clause */
 /* | NEW parameters_clause LP type-id RP               -- covered by parameters_clause parameters_clause */
-
+;
 /* ptr_operator_seq.opt production reused to save a %prec */
 new_type_id:                        
-	type_specifier ptr_operator_seq.opt
-   | type_specifier new_declarator
-   | type_specifier new_type_id
-	
+	type_specifier ptr_operator_seq.opt									{ $$ = alacnary(S_NEW_TYPE_ID, NEW_TYPE_IDr1, 2, $1, $2); }
+   | type_specifier new_declarator										{ $$ = alacnary(S_NEW_TYPE_ID, NEW_TYPE_IDr2, 2, $1, $2); }
+   | type_specifier new_type_id											{ $$ = alacnary(S_NEW_TYPE_ID, NEW_TYPE_IDr3, 2, $1, $2); }
+;	
 new_declarator:                     
-	ptr_operator new_declarator
-   | direct_new_declarator
-	
+	ptr_operator new_declarator											{ $$ = alacnary(S_NEW_DECLARATOR, NEW_DECLARATORr1, 2, $1, $2); }
+   | direct_new_declarator													{ $$ = alacnary(S_NEW_DECLARATOR, NEW_DECLARATORr2, 1, $1); }
+;	
 direct_new_declarator:              
-	LB expression RB
-   | direct_new_declarator LB constant_expression RB
+	LB expression RB															{ $$ = alacnary(S_DIRECT_NEW_DECLARATOR, DIRECT_NEW_DECLARATORr1, 3, $1, $2, $3); }
+   | direct_new_declarator LB constant_expression RB				{ $$ = alacnary(S_DIRECT_NEW_DECLARATOR, DIRECT_NEW_DECLARATORr2, 4, $1, $2, $3, $4); }
+;	
 new_initializer.opt:                
-	/* empty */
-   | LP expression_list.opt RP
-
+	/* empty */																	{  }
+   | LP expression_list.opt RP											{ $$ = alacnary(S_NEW_INIIALIZER_OPT, NEW_INIIALIZER_OPTr1, 3, $1, $2, $3); }
+;
 /*  cast-expression is generalised to support a [] as well as a () prefix. This covers the omission of DELETE[] which when
  *  followed by a parenthesised expression was ambiguous. It also covers the gcc indexed array initialisation for free.
  */
 cast_expression:                    
-	unary_expression
-   | abstract_expression cast_expression
+	unary_expression															{ $$ = alacnary(S_CAST_EXPRESSION, CAST_EXPRESSIONr1, 1, $1); }
+   | abstract_expression cast_expression								{ $$ = alacnary(S_CAST_EXPRESSION, CAST_EXPRESSIONr2, 2, $1, $2); }
 /* | LP type_id RP cast_expression                             -- covered by abstract_expression */
-
+;
 pm_expression:                      
-	cast_expression
-   | pm_expression DOT_STAR cast_expression
-   | pm_expression ARROW_STAR cast_expression
-	
+	cast_expression															{ $$ = alacnary(S_PM_EXPRESSION, PM_EXPRESSIONr1, 1, $1); }
+   | pm_expression DOT_STAR cast_expression							{ $$ = alacnary(S_PM_EXPRESSION, PM_EXPRESSIONr2, 3, $1, $2, $3); }
+   | pm_expression ARROW_STAR cast_expression						{ $$ = alacnary(S_PM_EXPRESSION, PM_EXPRESSIONr3, 3, $1, $2, $3); }
+;	
 multiplicative_expression:          
-	pm_expression
-   | multiplicative_expression star_ptr_operator pm_expression
-   | multiplicative_expression DIV pm_expression
-   | multiplicative_expression MOD pm_expression
-	
+	pm_expression																{ $$ = alacnary(S_MULTIPLICATIVE_EXPRESSION, MULTIPLICATIVE_EXPRESSIONr1, 1, $1); }
+   | multiplicative_expression star_ptr_operator pm_expression	{ $$ = alacnary(S_MULTIPLICATIVE_EXPRESSION, MULTIPLICATIVE_EXPRESSIONr2, 3, $1, $2, $3); }
+   | multiplicative_expression DIV pm_expression					{ $$ = alacnary(S_MULTIPLICATIVE_EXPRESSION, MULTIPLICATIVE_EXPRESSIONr3, 3, $1, $2, $3); }
+   | multiplicative_expression MOD pm_expression					{ $$ = alacnary(S_MULTIPLICATIVE_EXPRESSION, MULTIPLICATIVE_EXPRESSIONr4, 3, $1, $2, $3); }
+;	
 additive_expression:                
-	multiplicative_expression
-   | additive_expression PLUS multiplicative_expression
-   | additive_expression MINUS multiplicative_expression
-	
+	multiplicative_expression												{ $$ = alacnary(S_ADDITIVE_EXPRESSION, ADDITIVE_EXPRESSIONr1, 1, $1); }
+   | additive_expression PLUS multiplicative_expression			{ $$ = alacnary(S_ADDITIVE_EXPRESSION, ADDITIVE_EXPRESSIONr2, 3, $1, $2, $3); }
+   | additive_expression MINUS multiplicative_expression			{ $$ = alacnary(S_ADDITIVE_EXPRESSION, ADDITIVE_EXPRESSIONr3, 3, $1, $2, $3); }
+;	
 shift_expression:                   
-	additive_expression
-   | shift_expression SHL additive_expression
-   | shift_expression SHR additive_expression
-	
+	additive_expression														{ $$ = alacnary(S_SHIFT_EXPRESSION, SHIFT_EXPRESSIONr1, 1, $1); }
+   | shift_expression SHL additive_expression						{ $$ = alacnary(S_SHIFT_EXPRESSION, SHIFT_EXPRESSIONr2, 3, $1, $2, $3); }
+   | shift_expression SHR additive_expression						{ $$ = alacnary(S_SHIFT_EXPRESSION, SHIFT_EXPRESSIONr3, 3, $1, $2, $3); }
+;	
 relational_expression:              
-	shift_expression
-   | relational_expression LT shift_expression
-   | relational_expression GT shift_expression
-   | relational_expression LE shift_expression
-   | relational_expression GE shift_expression
-	
+	shift_expression															{ $$ = alacnary(S_RELATIONAL_EXPRESSION, RELATIONAL_EXPRESSIONr1, 1, $1); }
+   | relational_expression LT shift_expression						{ $$ = alacnary(S_RELATIONAL_EXPRESSION, RELATIONAL_EXPRESSIONr2, 3, $1, $2, $3); }
+   | relational_expression GT shift_expression						{ $$ = alacnary(S_RELATIONAL_EXPRESSION, RELATIONAL_EXPRESSIONr3, 3, $1, $2, $3); }
+   | relational_expression LE shift_expression						{ $$ = alacnary(S_RELATIONAL_EXPRESSION, RELATIONAL_EXPRESSIONr4, 3, $1, $2, $3); }
+   | relational_expression GE shift_expression						{ $$ = alacnary(S_RELATIONAL_EXPRESSION, RELATIONAL_EXPRESSIONr5, 3, $1, $2, $3); }
+;	
 equality_expression:                
-	relational_expression
-   | equality_expression EQ relational_expression
-   | equality_expression NE relational_expression
-	
+	relational_expression													{ $$ = alacnary(S_EQUALITY_EXPRESSION, EQUALITY_EXPRESSIONr1, 1, $1); }
+   | equality_expression EQ relational_expression					{ $$ = alacnary(S_EQUALITY_EXPRESSION, EQUALITY_EXPRESSIONr2, 3, $1, $2, $3); }
+   | equality_expression NE relational_expression					{ $$ = alacnary(S_EQUALITY_EXPRESSION, EQUALITY_EXPRESSIONr3, 3, $1, $2, $3); }
+;	
 and_expression:                     
-	equality_expression
-   | and_expression AND equality_expression
-	
+	equality_expression														{ $$ = alacnary(S_AND_EXPRESSION, AND_EXPRESSIONr1, 1, $1); }
+   | and_expression AND equality_expression							{ $$ = alacnary(S_AND_EXPRESSION, AND_EXPRESSIONr2, 3, $1, $2, $3); }
+;	
 exclusive_or_expression:            
-	and_expression
-   | exclusive_or_expression ER and_expression
-	
+	and_expression																{ $$ = alacnary(S_EXCLUSIVE_OR_EXPRESSION, EXCLUSIVE_OR_EXPRESSIONr1, 1, $1); }
+   | exclusive_or_expression ER and_expression						{ $$ = alacnary(S_EXCLUSIVE_OR_EXPRESSION, EXCLUSIVE_OR_EXPRESSIONr2, 3, $1, $2, $3); }
+;	
 inclusive_or_expression:            
-	exclusive_or_expression
-   | inclusive_or_expression OR exclusive_or_expression
-	
+	exclusive_or_expression													{ $$ = alacnary(S_INCLUSIVE_OR_EXPRESSION, INCLUSIVE_OR_EXPRESSIONr1, 1, $1); }
+   | inclusive_or_expression OR exclusive_or_expression			{ $$ = alacnary(S_INCLUSIVE_OR_EXPRESSION, INCLUSIVE_OR_EXPRESSIONr2, 3, $1, $2, $3); }
+;	
 logical_and_expression:             
-	inclusive_or_expression
-   | logical_and_expression LOG_AND inclusive_or_expression
-	
+	inclusive_or_expression													{ $$ = alacnary(S_LOGICAL_AND_EXPRESSION, LOGICAL_AND_EXPRESSIONr1, 1, $1); }
+   | logical_and_expression LOG_AND inclusive_or_expression		{ $$ = alacnary(S_LOGICAL_AND_EXPRESSION, LOGICAL_AND_EXPRESSIONr2, 3, $1, $2, $3); }
+;	
 logical_or_expression:              
-	logical_and_expression
-   | logical_or_expression LOG_OR logical_and_expression
-	
+	logical_and_expression													{ $$ = alacnary(S_LOGICAL_OR_EXPRESSION, LOGICAL_OR_EXPRESSIONr1, 1, $1); }
+   | logical_or_expression LOG_OR logical_and_expression			{ $$ = alacnary(S_LOGICAL_OR_EXPRESSION, LOGICAL_OR_EXPRESSIONr2, 3, $1, $2, $3); }
+;	
 conditional_expression:             
-	logical_or_expression
+	logical_or_expression													{ $$ = alacnary(S_CONDITIONAL_EXPRESSION, CONDITIONAL_EXPRESSIONr1, 1, $1); }
    | logical_or_expression QUEST expression COLON assignment_expression
-
+																					{ $$ = alacnary(S_CONDITIONAL_EXPRESSION, CONDITIONAL_EXPRESSIONr2, 5, $1, $2, $3, $4, $5); }
+;
 /*  assignment-expression is generalised to cover the simple assignment of a braced initializer in order to contribute to the
  *  coverage of parameter-declaration and init-declaration.
  */
 assignment_expression:              
-	conditional_expression
+	conditional_expression													{ $$ = alacnary(S_ASSIGNMENT_EXPRESSION, ASSIGNMENT_EXPRESSIONr1, 1, $1); }
    | logical_or_expression assignment_operator assignment_expression
-   | logical_or_expression ASN braced_initializer
-   | throw_expression
-	
+																					{ $$ = alacnary(S_ASSIGNMENT_EXPRESSION, ASSIGNMENT_EXPRESSIONr2, 3, $1, $2, $3); }
+   | logical_or_expression ASN braced_initializer					{ $$ = alacnary(S_ASSIGNMENT_EXPRESSION, ASSIGNMENT_EXPRESSIONr3, 3, $1, $2, $3); }
+   | throw_expression														{ $$ = alacnary(S_ASSIGNMENT_EXPRESSION, ASSIGNMENT_EXPRESSIONr4, 1, $1); }
+;	
 assignment_operator:                
-	ASN 
-	| ASS_ADD 
-	| ASS_AND 
-	| ASS_DIV 
-	| ASS_MOD 
-	| ASS_MUL 
-	| ASS_OR 
-	| ASS_SHL 
-	| ASS_SHR 
-	| ASS_SUB 
-	| ASS_XOR
-
+	ASN 																			{ $$ = alacnary(S_ASSIGNMENT_OPERATOR, ASSIGNMENT_OPERATORr1, 1, $1); }
+	| ASS_ADD 																	{ $$ = alacnary(S_ASSIGNMENT_OPERATOR, ASSIGNMENT_OPERATORr2, 1, $1); }
+	| ASS_AND 																	{ $$ = alacnary(S_ASSIGNMENT_OPERATOR, ASSIGNMENT_OPERATORr3, 1, $1); }
+	| ASS_DIV 																	{ $$ = alacnary(S_ASSIGNMENT_OPERATOR, ASSIGNMENT_OPERATORr4, 1, $1); }
+	| ASS_MOD 																	{ $$ = alacnary(S_ASSIGNMENT_OPERATOR, ASSIGNMENT_OPERATORr5, 1, $1); }
+	| ASS_MUL 																	{ $$ = alacnary(S_ASSIGNMENT_OPERATOR, ASSIGNMENT_OPERATORr6, 1, $1); }
+	| ASS_OR 																	{ $$ = alacnary(S_ASSIGNMENT_OPERATOR, ASSIGNMENT_OPERATORr7, 1, $1); }
+	| ASS_SHL 																	{ $$ = alacnary(S_ASSIGNMENT_OPERATOR, ASSIGNMENT_OPERATORr8, 1, $1); }
+	| ASS_SHR 																	{ $$ = alacnary(S_ASSIGNMENT_OPERATOR, ASSIGNMENT_OPERATORr9, 1, $1); }
+	| ASS_SUB 																	{ $$ = alacnary(S_ASSIGNMENT_OPERATOR, ASSIGNMENT_OPERATORr10, 1, $1); }
+	| ASS_XOR																	{ $$ = alacnary(S_ASSIGNMENT_OPERATOR, ASSIGNMENT_OPERATORr11, 1, $1); }
+;
 /*  expression is widely used and usually single-element, so the reductions are arranged so that a
  *  single-element expression is returned as is. Multi-element expressions are parsed as a list that
  *  may then behave polymorphically as an element or be compacted to an element. */ 
 expression.opt:                     
-	/* empty */
-   | expression
-	
+	/* empty */																	{  }
+   | expression																{ $$ = alacnary(S_EXPRESSION_OPT, EXPRESSION_OPTr1, 1, $1); }
+;	
 expression:                         
-	assignment_expression
-   | expression_list CM assignment_expression
-	
+	assignment_expression													{ $$ = alacnary(S_EXPRESSION, EXPRESSIONr1, 1, $1); }
+   | expression_list CM assignment_expression						{ $$ = alacnary(S_EXPRESSION, EXPRESSIONr2, 3, $1, $2, $3); }
+;	
 constant_expression:                
-	conditional_expression
-
+	conditional_expression													{ $$ = alacnary(S_CONSTANT_EXPRESSION, CONSTANT_EXPRESSIONr1, 1, $1); }
+;
 /*  The grammar is repeated for when the parser stack knows that the next > must end a template.
  */
 templated_relational_expression:    
-	shift_expression
-   | templated_relational_expression LT shift_expression
-   | templated_relational_expression LE shift_expression
-   | templated_relational_expression GE shift_expression
-	
+	shift_expression															{ $$ = alacnary(S_TEMPLATED_RELATIONAL_EXPRESSION, TEMPLATED_RELATIONAL_EXPRESSIONr1, 1, $1); }
+   | templated_relational_expression LT shift_expression			{ $$ = alacnary(S_TEMPLATED_RELATIONAL_EXPRESSION, TEMPLATED_RELATIONAL_EXPRESSIONr2, 3, $1, $2, $3); }
+   | templated_relational_expression LE shift_expression			{ $$ = alacnary(S_TEMPLATED_RELATIONAL_EXPRESSION, TEMPLATED_RELATIONAL_EXPRESSIONr3, 3, $1, $2, $3); }
+   | templated_relational_expression GE shift_expression			{ $$ = alacnary(S_TEMPLATED_RELATIONAL_EXPRESSION, TEMPLATED_RELATIONAL_EXPRESSIONr4, 3, $1, $2, $3); }
+;	
 templated_equality_expression:      
-	templated_relational_expression
+	templated_relational_expression										{ $$ = alacnary(S_TEMPLATED_EQUALITY_EXPRESSION, TEMPLATED_EQUALITY_EXPRESSIONr1, 1, $1); }
    | templated_equality_expression EQ templated_relational_expression
+																					{ $$ = alacnary(S_TEMPLATED_EQUALITY_EXPRESSION, TEMPLATED_EQUALITY_EXPRESSIONr2, 3, $1, $2, $3); }
    | templated_equality_expression NE templated_relational_expression
+																					{ $$ = alacnary(S_TEMPLATED_EQUALITY_EXPRESSION, TEMPLATED_EQUALITY_EXPRESSIONr3, 3, $1, $2, $3); }
+;	
+templated_and_expression:           
+	templated_equality_expression											{ $$ = alacnary(S_TEMPLATED_AND_EXPRESSION, TEMPLATED_AND_EXPRESSIONr1, 1, $1); }
+   | templated_and_expression AND templated_equality_expression { $$ = alacnary(S_TEMPLATED_AND_EXPRESSION, TEMPLATED_AND_EXPRESSIONr2, 3, $1, $2, $3); }
 	
-templated_and_expression:           templated_equality_expression
-    |                               templated_and_expression AND templated_equality_expression
-templated_exclusive_or_expression:  templated_and_expression
-    |                               templated_exclusive_or_expression ER templated_and_expression
+templated_exclusive_or_expression:  
+	templated_and_expression												{ $$ = alacnary(S_TEMPLATED_EXLUSIVE_OR_EXPRESSION, TEMPLATED_EXLUSIVE_OR_EXPRESSIONr1, 1, $1); }
+   | templated_exclusive_or_expression ER templated_and_expression
+																					{ $$ = alacnary(S_TEMPLATED_EXLUSIVE_OR_EXPRESSION, TEMPLATED_EXLUSIVE_OR_EXPRESSIONr2, 3, $1, $2, $3); }
 
-templated_inclusive_or_expression:  templated_exclusive_or_expression
-    |                               templated_inclusive_or_expression OR templated_exclusive_or_expression
+templated_inclusive_or_expression:  
+	templated_exclusive_or_expression									{ $$ = alacnary(S_TEMPLATED_INCLUSIVE_OR_EXPRESSION, TEMPLATED_INCLUSIVE_OR_EXPRESSIONr1, 1, $1); }
+   | templated_inclusive_or_expression OR templated_exclusive_or_expression
+																					{ $$ = alacnary(S_TEMPLATED_INCLUSIVE_OR_EXPRESSION, TEMPLATED_INCLUSIVE_OR_EXPRESSIONr2, 3, $1, $2, $3); }
 
-templated_logical_and_expression:   templated_inclusive_or_expression
-    |                               templated_logical_and_expression LOG_AND templated_inclusive_or_expression
+templated_logical_and_expression:   
+	templated_inclusive_or_expression									{ $$ = alacnary(S_TEMPLATED_LOGICAL_AND_EXPRESSION, TEMPLATED_LOGICAL_AND_EXPRESSIONr1, 1, $1); }
+   | templated_logical_and_expression LOG_AND templated_inclusive_or_expression
+																					{ $$ = alacnary(S_TEMPLATED_LOGICAL_AND_EXPRESSION, TEMPLATED_LOGICAL_AND_EXPRESSIONr2, 3, $1, $2, $3); }
 
-templated_logical_or_expression:    templated_logical_and_expression
-    |                               templated_logical_or_expression LOG_OR templated_logical_and_expression
+templated_logical_or_expression:    
+	templated_logical_and_expression										{ $$ = alacnary(S_TEMPLATED_LOGICAL_OR_EXPRESSION, TEMPLATED_LOGICAL_OR_EXPRESSIONr1, 1, $1); }
+   | templated_logical_or_expression LOG_OR templated_logical_and_expression
+																					{ $$ = alacnary(S_TEMPLATED_LOGICAL_OR_EXPRESSION, TEMPLATED_LOGICAL_OR_EXPRESSIONr2, 3, $1, $2, $3); }
 
-templated_conditional_expression:   templated_logical_or_expression
-    |                               templated_logical_or_expression QUEST templated_expression COLON templated_assignment_expression
+templated_conditional_expression:   
+	templated_logical_or_expression										{ $$ = alacnary(S_TEMPLATED_CONDITIONAL_EXPRESSION, TEMPLATED_CONDITIONAL_EXPRESSIONr1, 1, $1); }
+   | templated_logical_or_expression QUEST templated_expression COLON templated_assignment_expression
+																					{ $$ = alacnary(S_TEMPLATED_CONDITIONAL_EXPRESSION, TEMPLATED_CONDITIONAL_EXPRESSIONr2, 5, $1, $2, $3, $4, $5); }
 
-templated_assignment_expression:    templated_conditional_expression
-    |                               templated_logical_or_expression assignment_operator templated_assignment_expression
+templated_assignment_expression:    
+	templated_conditional_expression										{ $$ = alacnary(S_TEMPLATED_ASSIGNMENT_EXPRESSION, TEMPLATED_ASSIGNMENT_EXPRESSIONr1, 1, $1); }
+   | templated_logical_or_expression assignment_operator templated_assignment_expression
+																					{ $$ = alacnary(S_TEMPLATED_ASSIGNMENT_EXPRESSION, TEMPLATED_ASSIGNMENT_EXPRESSIONr2, 3, $1, $2, $3); }
+   | templated_throw_expression											{ $$ = alacnary(S_TEMPLATED_ASSIGNMENT_EXPRESSION, TEMPLATED_ASSIGNMENT_EXPRESSIONr3, 1, $1); }
+	
+templated_expression:               
+	templated_assignment_expression										{ $$ = alacnary(S_TEMPLATED_EXPRESSION, TEMPLATED_EXPRESSIONr1, 1, $1); }
+   | templated_expression_list CM templated_assignment_expression
+																					{ $$ = alacnary(S_TEMPLATED_EXPRESSION, TEMPLATED_EXPRESSIONr2, 3, $1, $2, $3); }
 
-    |                               templated_throw_expression
-templated_expression:               templated_assignment_expression
-    |                               templated_expression_list CM templated_assignment_expression
-
-templated_expression_list:          templated_assignment_expression
-    |                               templated_expression_list CM templated_assignment_expression
+templated_expression_list:          
+	templated_assignment_expression										{ $$ = alacnary(S_TEMPLATED_EXPRESSION_LIST, TEMPLATED_EXPRESSION_LISTr1, 1, $1); }
+   | templated_expression_list CM templated_assignment_expression
+																					{ $$ = alacnary(S_TEMPLATED_EXPRESSION_LIST, TEMPLATED_EXPRESSION_LISTr2, 3, $1, $2, $3); }
 
 /*---------------------------------------------------------------------------------------------------
  * A.5 Statements
  *---------------------------------------------------------------------------------------------------
  *  Parsing statements is easy once simple_declaration has been generalised to cover expression_statement.
  */
-looping_statement:                  start_search looped_statement                               { /*end_search(); */}
-looped_statement:                   statement
-    |                               advance_search PLUS looped_statement
-    |                               advance_search MINUS
-statement:                          control_statement
-/*  |                               expression_statement                                        -- covered by declaration_statement */
-    |                               compound_statement
-    |                               declaration_statement
-    |                               try_block
-control_statement:                  labeled_statement
-    |                               selection_statement
-    |                               iteration_statement
-    |                               jump_statement
-labeled_statement:                  identifier COLON looping_statement
-    |                               CASE constant_expression COLON looping_statement
-    |                               DEFAULT COLON looping_statement
-/*expression_statement:             expression.opt SM                                          -- covered by declaration_statement */
-compound_statement:                 LC statement_seq.opt RC
-    |                               LC statement_seq.opt looping_statement POUND bang error RC  { /*UNBANG("Bad statement-seq."); */}
-statement_seq.opt:                  /* empty */
-    |                               statement_seq.opt looping_statement
-    |                               statement_seq.opt looping_statement POUND bang error SM      { /*UNBANG("Bad statement.");*/ }
+looping_statement:                  
+	start_search looped_statement                               { /*end_search(); */}
+	
+looped_statement:                   
+	statement
+   | advance_search PLUS looped_statement
+   | advance_search MINUS
+	
+statement:                          
+	control_statement
+/* | expression_statement                                        -- covered by declaration_statement */
+   | compound_statement
+   | declaration_statement
+   | try_block
+	
+control_statement:                  
+	labeled_statement
+   | selection_statement
+   | iteration_statement
+   | jump_statement
+	
+labeled_statement:                  
+	identifier COLON looping_statement
+   | CASE constant_expression COLON looping_statement
+   | DEFAULT COLON looping_statement
+	
+/*expression_statement:             
+	expression.opt SM                                          -- covered by declaration_statement */
+	
+compound_statement:                 
+	LC statement_seq.opt RC
+   | LC statement_seq.opt looping_statement POUND bang error RC  { /*UNBANG("Bad statement-seq."); */}
+	
+statement_seq.opt:                  
+	/* empty */
+   | statement_seq.opt looping_statement
+   | statement_seq.opt looping_statement POUND bang error SM      { /*UNBANG("Bad statement.");*/ }
+	
 /*
  *  The dangling else conflict is resolved to the innermost if.
  */
-selection_statement:                IF LP condition RP looping_statement    %prec SHIFT_THERE
-    |                               IF LP condition RP looping_statement ELSE looping_statement
-    |                               SWITCH LP condition RP looping_statement
-condition.opt:                      /* empty */
-    |                               condition
-condition:                          parameter_declaration_list
-/*  |                               expression                                                  -- covered by parameter_declaration_list */
-/*  |                               type_specifier_seq declarator ASN assignment_expression     -- covered by parameter_declaration_list */
-iteration_statement:                WHILE LP condition RP looping_statement
-    |                               DO looping_statement WHILE LP expression RP SM
-    |                               FOR LP for_init_statement condition.opt SM expression.opt RP looping_statement
+selection_statement:                
+	IF LP condition RP looping_statement    %prec SHIFT_THERE
+   | IF LP condition RP looping_statement ELSE looping_statement
+   | SWITCH LP condition RP looping_statement
+	
+condition.opt:                      
+	/* empty */
+   | condition
+	
+condition:                          
+	parameter_declaration_list
+/* | expression                                                  -- covered by parameter_declaration_list */
+/* | type_specifier_seq declarator ASN assignment_expression     -- covered by parameter_declaration_list */
 
-for_init_statement:                 simple_declaration
-/*  |                               expression_statement                                        -- covered by simple_declaration */
-jump_statement:                     BREAK SM
-    |                               CONTINUE SM
-    |                               RETURN expression.opt SM
-    |                               GOTO identifier SM
+iteration_statement:                
+	WHILE LP condition RP looping_statement
+   | DO looping_statement WHILE LP expression RP SM
+   | FOR LP for_init_statement condition.opt SM expression.opt RP looping_statement
+
+for_init_statement:                 
+	simple_declaration
+/* | expression_statement                                        -- covered by simple_declaration */
+
+jump_statement:                     
+	BREAK SM
+   | CONTINUE SM
+   | RETURN expression.opt SM
+   | GOTO identifier SM
+	
 declaration_statement:              block_declaration
 
 /*---------------------------------------------------------------------------------------------------
