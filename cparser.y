@@ -19,12 +19,14 @@
  */
  %{
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
 #include "errors.h"
 #include "token.h"
 #include "120parse.h"
+#include "parsedef.h"
 
-#define false 0
-#define true 1
+struct node * alacnary(int, int, int,...);
 
 extern int line_num;
 int suppress_parse_error = 0;
@@ -252,85 +254,87 @@ int suppress_parse_error = 0;
  *  a bit-field declaration or constructor definition are not allowed.
  */
 identifier:                         
-	IDENT
+	IDENT																			{ $$ = alacnary(S_IDENTIFIER, IDENTIFIERr1, 0, $1); }
+;
 id:                                 
-	identifier                          %prec SHIFT_THERE       /* Force < through test */
-	| identifier template_test PLUS template_argument_list GT
-   | identifier template_test MINUS                                /* requeued < follows */
-   | template_id 
-	
+	identifier                      										{ $$ = alacnary(S_ID, IDr1, 1, $1); }    /*%prec SHIFT_THERE       /* Force < through test */
+	| identifier template_test PLUS template_argument_list GT	{ $$ = alacnary(S_ID, IDr2, 5, $1, $2, $3, $4, $5); }
+   | identifier template_test MINUS                            { $$ = alacnary(S_ID, IDr3, 3, $1, $2, $3); }   /* requeued < follows */
+   | template_id 																{ $$ = alacnary(S_ID, IDr4, 1, $1); }
+;	
 template_test:                      
-	LT             /* Queue '+' or '-' < as follow on */       { /*template_test();*/ }
-	
+	LT             /* Queue '+' or '-' < as follow on */        { /*template_test();*/ }
+;	
 global_scope:                       
-	SCOPE
-   | TEMPLATE global_scope
-	
+	SCOPE																			{ $$ = alacnary(S_GLOBAL_SCOPE, GLOBAL_SCOPEr1, 1, $1); }
+   | TEMPLATE global_scope													{ $$ = alacnary(S_GLOBAL_SCOPE, GLOBAL_SCOPEr2, 2, $1, $2); }
+;	
 id_scope:                           
-	id SCOPE
+	id SCOPE																		{ $$ = alacnary(S_ID_SCOPE, ID_SCOPEr1, 2, $1, $2); }
+;
 /*
  *  A :: B :: C; is ambiguous How much is type and how much name ?
  *  The %prec maximises the (type) length which is the 7.1-2 semantic constraint.
  */
 nested_id:                          
-	id                                  %prec SHIFT_THERE       /* Maximise length */
-   | id_scope nested_id
-	
+	id                            										{ $$ = alacnary(S_NESTED_ID, NESTED_IDr1, 1, $1); }/*%prec SHIFT_THERE       /* Maximise length */
+   | id_scope nested_id														{ $$ = alacnary(S_NESTED_ID, NESTED_IDr2, 2, $1, $2); }
+;
 scoped_id:                          
-	nested_id
-   | global_scope nested_id
-
+	nested_id																	{ $$ = alacnary(S_SCOPED_ID, SCOPED_IDr1, 1, $1); }
+   | global_scope nested_id												{ $$ = alacnary(S_SCOPED_ID, SCOPED_IDr2, 2, $1, $2); }
+;
 /*
  *  destructor_id has to be held back to avoid a conflict with a one's complement as per 5.3.1-9,
  *  It gets put back only when scoped or in a declarator_id, which is only used as an explicit member name.
  *  Declarations of an unscoped destructor are always parsed as a one's complement.
  */
 destructor_id:                      
-	NOT id
-   | TEMPLATE destructor_id
-	
+	NOT id																		{ $$ = alacnary(S_DESTRUCTOR_ID, DESTRUCTOR_IDr1, 2, $1, $2); }
+   | TEMPLATE destructor_id												{ $$ = alacnary(S_DESTRUCTOR_ID, DESTRUCTOR_IDr2, 2, $1, $2); }
+;
 special_function_id:                
-	conversion_function_id
-   | operator_function_id
-   | TEMPLATE special_function_id
-	
+	conversion_function_id													{ $$ = alacnary(S_SPECIAL_FUNCTION_ID, SPECIAL_FUNCTION_IDr1, 1, $1); }
+   | operator_function_id													{ $$ = alacnary(S_SPECIAL_FUNCTION_ID, SPECIAL_FUNCTION_IDr2, 1, $1); }
+   | TEMPLATE special_function_id										{ $$ = alacnary(S_SPECIAL_FUNCTION_ID, SPECIAL_FUNCTION_IDr3, 2, $1, $2); }
+;	
 nested_special_function_id:         
-	special_function_id
-   | id_scope destructor_id
-   | id_scope nested_special_function_id
-	
+	special_function_id														{ $$ = alacnary(S_NESTED_SPECIAL_FUNCTION_ID, NESTED_SPECIAL_FUNCTION_IDr1, 1, $1); }
+   | id_scope destructor_id												{ $$ = alacnary(S_NESTED_SPECIAL_FUNCTION_ID, NESTED_SPECIAL_FUNCTION_IDr2, 2, $1, $2); }
+   | id_scope nested_special_function_id								{ $$ = alacnary(S_NESTED_SPECIAL_FUNCTION_ID, NESTED_SPECIAL_FUNCTION_IDr3, 2, $1, $2); }
+;	
 scoped_special_function_id:         
-	nested_special_function_id
-   | global_scope nested_special_function_id
-
+	nested_special_function_id												{ $$ = alacnary(S_SCOPED_SPECIAL_FUNCTION_ID, SCOPED_SPECIAL_FUNCTION_IDr1, 1, $1); }
+   | global_scope nested_special_function_id							{ $$ = alacnary(S_SCOPED_SPECIAL_FUNCTION_ID, SCOPED_SPECIAL_FUNCTION_IDr2, 2, $1, $2); }
+;
 /* declarator-id is all names in all scopes, except reserved words */
 declarator_id:                      
-	scoped_id
-   | scoped_special_function_id
-   | destructor_id
-
+	scoped_id																	{ $$ = alacnary(S_DECLARATOR_ID, DECLARATOR_IDr1, 1, $1); }
+   | scoped_special_function_id											{ $$ = alacnary(S_DECLARATOR_ID, DECLARATOR_IDr2, 1, $1); }
+   | destructor_id															{ $$ = alacnary(S_DECLARATOR_ID, DECLARATOR_IDr3, 1, $1); }
+;
 /*  The standard defines pseudo-destructors in terms of type-name, which is class/enum/typedef, of which
  *  class-name is covered by a normal destructor. pseudo-destructors are supposed to support ~int() in
  *  templates, so the grammar here covers built-in names. Other names are covered by the lack of
  *  identifier/type discrimination.
  */
 built_in_type_id:                   
-	built_in_type_specifier
-   | built_in_type_id built_in_type_specifier
-	
+	built_in_type_specifier													{ $$ = alacnary(S_BUILT_IN_TYPE_ID, BUILT_IN_TYPE_IDr1, 1, $1); }
+   | built_in_type_id built_in_type_specifier						{ $$ = alacnary(S_BUILT_IN_TYPE_ID, BUILT_IN_TYPE_IDr2, 2, $1, $2); }
+;	
 pseudo_destructor_id:               
-	built_in_type_id SCOPE NOT built_in_type_id
-   | NOT built_in_type_id
-   | TEMPLATE pseudo_destructor_id
-	
+	built_in_type_id SCOPE NOT built_in_type_id						{ $$ = alacnary(S_PSEUDO_DESTRUCTOR_ID, PSEUDO_DESTRUCTOR_IDr1, 4, $1, $2, $3, $4); }
+   | NOT built_in_type_id													{ $$ = alacnary(S_PSEUDO_DESTRUCTOR_ID, PSEUDO_DESTRUCTOR_IDr2, 2, $1, $2); }
+   | TEMPLATE pseudo_destructor_id										{ $$ = alacnary(S_PSEUDO_DESTRUCTOR_ID, PSEUDO_DESTRUCTOR_IDr3, 2, $1, $2); }
+;	
 nested_pseudo_destructor_id:        
-	pseudo_destructor_id
-   | id_scope nested_pseudo_destructor_id
-	
+	pseudo_destructor_id														{ $$ = alacnary(S_NESTED_PSEUDO_DESTRUCTOR_ID, NESTED_PSEUDO_DESTRUCTOR_IDr1, 1, $1); }
+   | id_scope nested_pseudo_destructor_id								{ $$ = alacnary(S_NESTED_PSEUDO_DESTRUCTOR_ID, NESTED_PSEUDO_DESTRUCTOR_IDr2, 2, $1, $2); }
+;	
 scoped_pseudo_destructor_id:        
-	nested_pseudo_destructor_id
-   | global_scope scoped_pseudo_destructor_id
-
+	nested_pseudo_destructor_id											{ $$ = alacnary(S_SCOPED_PSEUDO_DESTRUCTOR_ID, SCOPED_PSEUDO_DESTRUCTOR_IDr1, 1, $1); }
+   | global_scope scoped_pseudo_destructor_id						{ $$ = alacnary(S_SCOPED_PSEUDO_DESTRUCTOR_ID, SCOPED_PSEUDO_DESTRUCTOR_IDr2, 2, $1, $2); }
+;
 /*---------------------------------------------------------------------------------------------------
  * A.2 Lexical conventions
  *---------------------------------------------------------------------------------------------------*/
@@ -341,24 +345,24 @@ scoped_pseudo_destructor_id:
  *  is correctly resolved to maximise the string length as the token source should do anyway.
  */
 string:                             
-	STRING
-
+	STRING																		{ $$ = alacnary(S_STRING, STRINGr1, 1, $1); }
+;
 literal:                            
-	ICON
-   | CCON
-   | FCON
-   | string
-   | boolean_literal
-	
+	ICON																			{ $$ = alacnary(S_LITERAL, LITERALr1, 1, $1); }
+   | CCON																		{ $$ = alacnary(S_LITERAL, LITERALr2, 1, $1); }
+   | FCON																		{ $$ = alacnary(S_LITERAL, LITERALr3, 1, $1); }
+   | string																		{ $$ = alacnary(S_LITERAL, LITERALr4, 1, $1); }
+   | boolean_literal															{ $$ = alacnary(S_LITERAL, LITERALr5, 1, $1); }
+;	
 boolean_literal:                    
-	FALSE
-   | TRUE
-
+	FALSE																			{ $$ = alacnary(S_BOOLEAN_LITERAL, BOOLEAN_LITERALr1, 1, $1); }
+   | TRUE																		{ $$ = alacnary(S_BOOLEAN_LITERAL, BOOLEAN_LITERALr2, 1, $1); }
+;
 /*---------------------------------------------------------------------------------------------------
  * A.3 Basic concepts
  *---------------------------------------------------------------------------------------------------*/
 translation_unit:                   
-	declaration_seq.opt
+	declaration_seq.opt														{ $$ = alacnary(S_TRANSLATION_UNIT, TRANSLATION_UNITr1, 1, $1); }
 
 /*---------------------------------------------------------------------------------------------------
  * A.4 Expressions
@@ -391,22 +395,23 @@ translation_unit:
  *  destructor as the final name. 
  */
 primary_expression:                 
-	literal
-   | THIS
-   | suffix_decl_specified_ids
+	literal																		{ $$ = alacnary(S_PRIMARY_EXPRESSION, PRIMARY_EXPRESSIONr1, 1, $1); }
+   | THIS																		{ $$ = alacnary(S_PRIMARY_EXPRESSION, PRIMARY_EXPRESSIONr2, 1, $1); }
+   | suffix_decl_specified_ids											{ $$ = alacnary(S_PRIMARY_EXPRESSION, PRIMARY_EXPRESSIONr3, 1, $1); }
 /* | SCOPE identifier                                            -- covered by suffix_decl_specified_ids */
 /* | SCOPE operator_function_id                                  -- covered by suffix_decl_specified_ids */
 /* | SCOPE qualified_id                                          -- covered by suffix_decl_specified_ids */
-   | abstract_expression            %prec REDUCE_HERE_MOSTLY  /* Prefer binary to unary ops, cast to call */
+   | abstract_expression            									{ $$ = alacnary(S_PRIMARY_EXPRESSION, PRIMARY_EXPRESSIONr4, 1, $1); }
+																					/*%prec REDUCE_HERE_MOSTLY  /* Prefer binary to unary ops, cast to call */
 /* | id_expression                                               -- covered by suffix_decl_specified_ids */
 
 /*
  *  Abstract-expression covers the () and [] of abstract-declarators.
  */
 abstract_expression:                
-	parenthesis_clause
-   | LB expression.opt RB
-   | TEMPLATE abstract_expression
+	parenthesis_clause														{ $$ = alacnary(S_ABSTRACT_EXPRESSION, ABSTRACT_EXPRESSIONr1, 1, $1); }
+   | LB expression.opt RB													{ $$ = alacnary(S_ABSTRACT_EXPRESSION, ABSTRACT_EXPRESSIONr2, 3, $1, $2, $3); }
+   | TEMPLATE abstract_expression										{ $$ = alacnary(S_ABSTRACT_EXPRESSION, ABSTRACT_EXPRESSIONr3, 2, $1, $2); }
 
 /*  Type I function parameters are ambiguous with respect to the generalised name, so we have to do a lookahead following
  *  any function-like parentheses. This unfortunately hits normal code, so kill the -- lines and add the ++ lines for efficiency.
@@ -414,8 +419,8 @@ abstract_expression:
  *  get traversed since they are valid generalised type I parameters!
  */
 type1_parameters:       
-	/*----*/    parameter_declaration_list SM
-   | /*----*/    type1_parameters parameter_declaration_list SM
+	/*----*/    parameter_declaration_list SM							{ $$ = alacnary(S_TYPE1_PARAMETERS, TYPE1_PARAMETERSr1, 2, $1, $2); }
+   | /*----*/    type1_parameters parameter_declaration_list SM { $$ = alacnary(S_TYPE1_PARAMETERS, TYPE1_PARAMETERSr2, 3, $1, $2, $3); }
 	
 mark_type1:                         
 	/* empty */                                             { /*mark_type1(); yyclearin;*/ }
@@ -423,61 +428,64 @@ mark_type1:
 postfix_expression:                 
 	primary_expression
 /* | /++++++/    postfix_expression parenthesis_clause */
-   | /*----*/    postfix_expression parenthesis_clause mark_type1 MINUS
+   | /*----*/    postfix_expression parenthesis_clause mark_type1 MINUS	
+																					{ $$ = alacnary(S_POSTFIX_EXPRESSION, POSTFIX_EXPRESSIONr1, 4, $1, $2, $3, $4); }
    | /*----*/    postfix_expression parenthesis_clause mark_type1 PLUS type1_parameters mark LC error 
      /*----*/                    { /*yyerrok; yyclearin; remark_type1(); unmark(); unmark(); */}
    | /*----*/    postfix_expression parenthesis_clause mark_type1 PLUS type1_parameters mark error 
      /*----*/                    { /*yyerrok; yyclearin; remark_type1(); unmark(); unmark();*/}
    | /*----*/    postfix_expression parenthesis_clause mark_type1 PLUS error
      /*----*/                    { /*yyerrok; yyclearin; remark_type1(); unmark(); */}
-   | postfix_expression LB expression.opt RB
+   | postfix_expression LB expression.opt RB							{ $$ = alacnary(S_POSTFIX_EXPRESSION, POSTFIX_EXPRESSIONr2, 4, $1, $2, $3, $4); }
 /* | destructor_id LB expression.opt RB                    -- not semantically valid */
 /* | destructor_id parenthesis_clause                        -- omitted to resolve known ambiguity */
 /* | simple_type_specifier LP expression_list.opt RP       -- simple_type_specifier is a primary_expression */
-   | postfix_expression DOT declarator_id
+   | postfix_expression DOT declarator_id								{ $$ = alacnary(S_POSTFIX_EXPRESSION, POSTFIX_EXPRESSIONr3, 3, $1, $2, $3); }
 /* | postfix_expression DOT TEMPLATE declarator_id           -- TEMPLATE absorbed into declarator_id. */
-   | postfix_expression DOT scoped_pseudo_destructor_id
-   | postfix_expression ARROW declarator_id
+   | postfix_expression DOT scoped_pseudo_destructor_id			{ $$ = alacnary(S_POSTFIX_EXPRESSION, POSTFIX_EXPRESSIONr4, 3, $1, $2, $3); }
+   | postfix_expression ARROW declarator_id							{ $$ = alacnary(S_POSTFIX_EXPRESSION, POSTFIX_EXPRESSIONr5, 3, $1, $2, $3); }
 /* | postfix_expression ARROW TEMPLATE declarator_id         -- TEMPLATE absorbed into declarator_id. */
-   | postfix_expression ARROW scoped_pseudo_destructor_id   
-   | postfix_expression INC
-   | postfix_expression DEC
-   | DYNAMIC_CAST LT type_id GT LP expression RP
-   | STATIC_CAST LT type_id GT LP expression RP
-   | REINTERPRET_CAST LT type_id GT LP expression RP
-   | CONST_CAST LT type_id GT LP expression RP
-   | TYPEID parameters_clause
+   | postfix_expression ARROW scoped_pseudo_destructor_id   	{ $$ = alacnary(S_POSTFIX_EXPRESSION, POSTFIX_EXPRESSIONr6, 3, $1, $2, $3); }
+   | postfix_expression INC												{ $$ = alacnary(S_POSTFIX_EXPRESSION, POSTFIX_EXPRESSIONr7, 2, $1, $2); }
+   | postfix_expression DEC												{ $$ = alacnary(S_POSTFIX_EXPRESSION, POSTFIX_EXPRESSIONr8, 2, $1, $2); }
+   | DYNAMIC_CAST LT type_id GT LP expression RP					{ $$ = alacnary(S_POSTFIX_EXPRESSION, POSTFIX_EXPRESSIONr9, 7, $1, $2, $3, $4, $5, $6, $7); }
+   | STATIC_CAST LT type_id GT LP expression RP						{ $$ = alacnary(S_POSTFIX_EXPRESSION, POSTFIX_EXPRESSIONr10, 7, $1, $2, $3, $4, $5, $6, $7); }
+   | REINTERPRET_CAST LT type_id GT LP expression RP				{ $$ = alacnary(S_POSTFIX_EXPRESSION, POSTFIX_EXPRESSIONr11, 7, $1, $2, $3, $4, $5, $6, $7); }
+   | CONST_CAST LT type_id GT LP expression RP						{ $$ = alacnary(S_POSTFIX_EXPRESSION, POSTFIX_EXPRESSIONr12, 7, $1, $2, $3, $4, $5, $6, $7); }
+   | TYPEID parameters_clause												{ $$ = alacnary(S_POSTFIX_EXPRESSION, POSTFIX_EXPRESSIONr13, 2, $1, $2); }
 /* | TYPEID LP expression RP                               -- covered by parameters_clause */
 /* | TYPEID LP type_id RP                                  -- covered by parameters_clause */
 
 expression_list.opt:                
-	/* empty */
-   | expression_list
+	/* empty */																	{ $$ = $1; }
+   | expression_list															{ $$ = alacnary(S_EXPRESSION_LIST_OPT, EXPRESSION_LIST_OPTr1, 1, $1); }
 	
 expression_list:                    
-	assignment_expression
-   | expression_list CM assignment_expression
+	assignment_expression													{ $$ = alacnary(S_EXPRESSION_LIST, EXPRESSION_LISTr1, 1, $1); }
+   | expression_list CM assignment_expression						{ $$ = alacnary(S_EXPRESSION_LIST, EXPRESSION_LISTr2, 3, $1, $2, $3); }
 
 unary_expression:                   
-	postfix_expression
-   | INC cast_expression
-   | DEC cast_expression
-   | ptr_operator cast_expression
+	postfix_expression														{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr1, 1, $1); }
+   | INC cast_expression													{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr2, 2, $1, $2); }
+   | DEC cast_expression													{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr3, 2, $1, $2); }
+   | ptr_operator cast_expression										{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr4, 2, $1, $2); }
 /* | MUL cast_expression                                     -- covered by ptr_operator */
 /* | AND cast_expression                                     -- covered by ptr_operator */
 /* | decl_specifier_seq MUL cast_expression                  -- covered by binary operator */
 /* | decl_specifier_seq AND cast_expression                  -- covered by binary operator */
-   | suffix_decl_specified_scope star_ptr_operator cast_expression   /* covers e.g int ::type::* const t = 4 */
-	| PLUS cast_expression
-   | MINUS cast_expression
-   | BANG cast_expression
-   | NOT cast_expression
-   | SIZEOF unary_expression
+   | suffix_decl_specified_scope star_ptr_operator cast_expression   
+																					{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr5, 3, $1, $2, $3); }
+																					/* covers e.g int ::type::* const t = 4 */
+	| PLUS cast_expression													{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr6, 2, $1, $2); }
+   | MINUS cast_expression													{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr7, 2, $1, $2); }
+   | BANG cast_expression													{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr8, 2, $1, $2); }
+   | NOT cast_expression													{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr9, 2, $1, $2); }
+   | SIZEOF unary_expression												{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr10, 2, $1, $2); }
 /* | SIZEOF LP type_id RP                                  -- covered by unary_expression */
-   | new_expression
-   | global_scope new_expression
-   | delete_expression
-   | global_scope delete_expression
+   | new_expression															{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr11, 1, $1); }
+   | global_scope new_expression											{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr12, 2, $1, $2); }
+   | delete_expression														{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr13, 1, $1); }
+   | global_scope delete_expression										{ $$ = alacnary(S_UNARY_EXPRESSION, UNARY_EXPRESSIONr14, 2, $1, $2); }
 /* | DELETE LB RB cast_expression       -- covered by DELETE cast_expression since cast_expression covers ... */
 /* | SCOPE DELETE LB RB cast_expression //  ... abstract_expression cast_expression and so [] cast_expression */
 
@@ -1197,3 +1205,18 @@ start_search1:                      /* empty */         {/* start_search(true); 
 util:                               /* empty */           /* Get current utility mode */
 
 %%
+
+struct TreeNode * alacnary(int symbol, int prodRule, int children,...){
+	struct TreeNode * nd;
+	nd =  treenode(symbol);
+	nd->u.nt.rule = prodRule;
+	int c = 0;
+	va_list mylist;
+	va_start(mylist, children);
+	while(c < children){
+		nd->u.nt.child[c] = va_arg(mylist, struct node *);
+		c++;
+	}
+	va_end(mylist);
+	return nd;
+}

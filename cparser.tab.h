@@ -171,7 +171,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1685 of yacc.c  */
-#line 34 "cparser.y"
+#line 36 "cparser.y"
 
 	struct token *t;
 	struct node *n;

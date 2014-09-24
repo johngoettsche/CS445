@@ -77,13 +77,15 @@
 #define false 0
 #define true 1
 
+struct node * alacnary(int, int, int,...);
+
 extern int line_num;
 int suppress_parse_error = 0;
 
 
 
 /* Line 189 of yacc.c  */
-#line 87 "cparser.tab.c"
+#line 89 "cparser.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -243,7 +245,7 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 34 "cparser.y"
+#line 36 "cparser.y"
 
 	struct token *t;
 	struct node *n;
@@ -251,7 +253,7 @@ typedef union YYSTYPE
 
 
 /* Line 214 of yacc.c  */
-#line 255 "cparser.tab.c"
+#line 257 "cparser.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -263,7 +265,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 267 "cparser.tab.c"
+#line 269 "cparser.tab.c"
 
 #ifdef short
 # undef short
@@ -776,62 +778,62 @@ static const yytype_int16 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   255,   255,   257,   258,   259,   260,   263,   266,   267,
-     270,   276,   277,   280,   281,   289,   290,   293,   294,   295,
-     298,   299,   300,   303,   304,   308,   309,   310,   318,   319,
-     322,   323,   324,   327,   328,   331,   332,   344,   347,   348,
-     349,   350,   351,   354,   355,   361,   394,   395,   396,   400,
-     407,   408,   409,   417,   418,   421,   424,   426,   427,   429,
-     431,   433,   437,   439,   440,   442,   443,   444,   445,   446,
-     447,   448,   449,   453,   455,   458,   459,   462,   463,   464,
-     465,   470,   471,   472,   473,   474,   475,   477,   478,   479,
-     480,   485,   488,   489,   490,   492,   498,   499,   500,   503,
-     504,   507,   508,   509,   511,   517,   518,   522,   523,   524,
-     527,   528,   529,   530,   533,   534,   535,   538,   539,   540,
-     543,   544,   545,   546,   547,   550,   551,   552,   555,   556,
-     559,   560,   563,   564,   567,   568,   571,   572,   575,   576,
-     582,   583,   584,   585,   588,   589,   590,   591,   592,   593,
-     594,   595,   596,   597,   598,   603,   605,   608,   609,   612,
-     617,   618,   619,   620,   623,   624,   625,   627,   628,   629,
-     630,   632,   633,   635,   636,   638,   639,   641,   642,   644,
-     645,   647,   648,   649,   651,   652,   659,   660,   661,   662,
-     663,   665,   666,   667,   668,   669,   670,   671,   672,   673,
-     674,   676,   677,   678,   679,   680,   684,   685,   686,   687,
-     688,   689,   692,   693,   694,   696,   698,   699,   700,   701,
-     702,   707,   708,   710,   711,   712,   713,   714,   715,   716,
-     717,   718,   719,   721,   722,   723,   724,   725,   726,   727,
-     728,   729,   730,   731,   732,   733,   734,   735,   736,   751,
-     752,   753,   754,   755,   756,   757,   758,   759,   760,   761,
-     762,   763,   764,   765,   766,   767,   768,   769,   770,   771,
-     773,   774,   775,   776,   777,   779,   781,   782,   784,   784,
-     784,   785,   786,   788,   789,   790,   792,   793,   794,   796,
-     797,   798,   799,   800,   801,   802,   802,   802,   802,   802,
-     802,   802,   802,   802,   802,   802,   813,   814,   815,   817,
-     818,   819,   820,   821,   822,   823,   824,   825,   826,   827,
-     828,   829,   830,   831,   832,   833,   834,   836,   837,   838,
-     840,   841,   843,   844,   845,   846,   852,   853,   854,   861,
-     862,   863,   864,   865,   866,   867,   868,   869,   871,   872,
-     874,   875,   876,   876,   879,   880,   883,   884,   885,   886,
-     887,   888,   889,   890,   893,   894,   895,   897,   898,   899,
-     900,   901,   909,   910,   911,   912,   913,   914,   915,   916,
-     917,   918,   919,   923,   924,   925,   927,   928,   929,   930,
-     936,   937,   938,   939,   940,   941,   942,   943,   944,   945,
-     946,   947,   948,   956,   957,   958,   959,   960,   961,   962,
-     964,   965,   966,   967,   968,   969,   984,   985,   986,   987,
-     988,   989,   990,   991,   991,   991,   992,   993,   995,   996,
-     997,   999,  1000,  1001,  1002,  1003,  1004,  1005,  1008,  1009,
-    1016,  1017,  1018,  1019,  1020,  1021,  1022,  1023,  1024,  1027,
-    1028,  1029,  1030,  1031,  1033,  1034,  1035,  1041,  1042,  1043,
-    1044,  1045,  1046,  1046,  1046,  1051,  1052,  1053,  1061,  1062,
-    1063,  1064,  1065,  1066,  1067,  1068,  1069,  1070,  1075,  1085,
-    1086,  1091,  1092,  1093,  1094,  1095,  1096,  1097,  1098,  1099,
-    1100,  1101,  1102,  1103,  1104,  1105,  1106,  1107,  1108,  1109,
-    1110,  1111,  1112,  1113,  1114,  1115,  1116,  1117,  1118,  1119,
-    1120,  1121,  1122,  1123,  1124,  1125,  1126,  1127,  1128,  1133,
-    1134,  1135,  1136,  1137,  1138,  1139,  1140,  1141,  1142,  1143,
-    1144,  1146,  1148,  1149,  1150,  1151,  1155,  1156,  1157,  1167,
-    1172,  1174,  1175,  1176,  1177,  1179,  1180,  1181,  1182,  1183,
-    1184,  1185,  1186,  1191,  1192,  1193,  1194,  1195,  1196,  1197
+       0,   257,   257,   259,   260,   261,   262,   265,   268,   269,
+     272,   278,   279,   282,   283,   291,   292,   295,   296,   297,
+     300,   301,   302,   305,   306,   310,   311,   312,   320,   321,
+     324,   325,   326,   329,   330,   333,   334,   346,   349,   350,
+     351,   352,   353,   356,   357,   363,   396,   397,   398,   402,
+     409,   410,   411,   419,   420,   423,   426,   428,   429,   431,
+     433,   435,   439,   441,   442,   444,   445,   446,   447,   448,
+     449,   450,   451,   455,   457,   460,   461,   464,   465,   466,
+     467,   472,   473,   474,   475,   476,   477,   479,   480,   481,
+     482,   487,   490,   491,   492,   494,   500,   501,   502,   505,
+     506,   509,   510,   511,   513,   519,   520,   524,   525,   526,
+     529,   530,   531,   532,   535,   536,   537,   540,   541,   542,
+     545,   546,   547,   548,   549,   552,   553,   554,   557,   558,
+     561,   562,   565,   566,   569,   570,   573,   574,   577,   578,
+     584,   585,   586,   587,   590,   591,   592,   593,   594,   595,
+     596,   597,   598,   599,   600,   605,   607,   610,   611,   614,
+     619,   620,   621,   622,   625,   626,   627,   629,   630,   631,
+     632,   634,   635,   637,   638,   640,   641,   643,   644,   646,
+     647,   649,   650,   651,   653,   654,   661,   662,   663,   664,
+     665,   667,   668,   669,   670,   671,   672,   673,   674,   675,
+     676,   678,   679,   680,   681,   682,   686,   687,   688,   689,
+     690,   691,   694,   695,   696,   698,   700,   701,   702,   703,
+     704,   709,   710,   712,   713,   714,   715,   716,   717,   718,
+     719,   720,   721,   723,   724,   725,   726,   727,   728,   729,
+     730,   731,   732,   733,   734,   735,   736,   737,   738,   753,
+     754,   755,   756,   757,   758,   759,   760,   761,   762,   763,
+     764,   765,   766,   767,   768,   769,   770,   771,   772,   773,
+     775,   776,   777,   778,   779,   781,   783,   784,   786,   786,
+     786,   787,   788,   790,   791,   792,   794,   795,   796,   798,
+     799,   800,   801,   802,   803,   804,   804,   804,   804,   804,
+     804,   804,   804,   804,   804,   804,   815,   816,   817,   819,
+     820,   821,   822,   823,   824,   825,   826,   827,   828,   829,
+     830,   831,   832,   833,   834,   835,   836,   838,   839,   840,
+     842,   843,   845,   846,   847,   848,   854,   855,   856,   863,
+     864,   865,   866,   867,   868,   869,   870,   871,   873,   874,
+     876,   877,   878,   878,   881,   882,   885,   886,   887,   888,
+     889,   890,   891,   892,   895,   896,   897,   899,   900,   901,
+     902,   903,   911,   912,   913,   914,   915,   916,   917,   918,
+     919,   920,   921,   925,   926,   927,   929,   930,   931,   932,
+     938,   939,   940,   941,   942,   943,   944,   945,   946,   947,
+     948,   949,   950,   958,   959,   960,   961,   962,   963,   964,
+     966,   967,   968,   969,   970,   971,   986,   987,   988,   989,
+     990,   991,   992,   993,   993,   993,   994,   995,   997,   998,
+     999,  1001,  1002,  1003,  1004,  1005,  1006,  1007,  1010,  1011,
+    1018,  1019,  1020,  1021,  1022,  1023,  1024,  1025,  1026,  1029,
+    1030,  1031,  1032,  1033,  1035,  1036,  1037,  1043,  1044,  1045,
+    1046,  1047,  1048,  1048,  1048,  1053,  1054,  1055,  1063,  1064,
+    1065,  1066,  1067,  1068,  1069,  1070,  1071,  1072,  1077,  1087,
+    1088,  1093,  1094,  1095,  1096,  1097,  1098,  1099,  1100,  1101,
+    1102,  1103,  1104,  1105,  1106,  1107,  1108,  1109,  1110,  1111,
+    1112,  1113,  1114,  1115,  1116,  1117,  1118,  1119,  1120,  1121,
+    1122,  1123,  1124,  1125,  1126,  1127,  1128,  1129,  1130,  1135,
+    1136,  1137,  1138,  1139,  1140,  1141,  1142,  1143,  1144,  1145,
+    1146,  1148,  1150,  1151,  1152,  1153,  1157,  1158,  1159,  1169,
+    1174,  1176,  1177,  1178,  1179,  1181,  1182,  1183,  1184,  1185,
+    1186,  1187,  1188,  1193,  1194,  1195,  1196,  1197,  1198,  1199
 };
 #endif
 
@@ -3200,238 +3202,238 @@ yyreduce:
         case 7:
 
 /* Line 1464 of yacc.c  */
-#line 263 "cparser.y"
+#line 265 "cparser.y"
     { /*template_test();*/ ;}
     break;
 
   case 55:
 
 /* Line 1464 of yacc.c  */
-#line 421 "cparser.y"
+#line 423 "cparser.y"
     { /*mark_type1(); yyclearin;*/ ;}
     break;
 
   case 58:
 
 /* Line 1464 of yacc.c  */
-#line 428 "cparser.y"
+#line 430 "cparser.y"
     { /*yyerrok; yyclearin; remark_type1(); unmark(); unmark(); */;}
     break;
 
   case 59:
 
 /* Line 1464 of yacc.c  */
-#line 430 "cparser.y"
+#line 432 "cparser.y"
     { /*yyerrok; yyclearin; remark_type1(); unmark(); unmark();*/;}
     break;
 
   case 60:
 
 /* Line 1464 of yacc.c  */
-#line 432 "cparser.y"
+#line 434 "cparser.y"
     { /*yyerrok; yyclearin; remark_type1(); unmark(); */;}
     break;
 
   case 186:
 
 /* Line 1464 of yacc.c  */
-#line 659 "cparser.y"
+#line 661 "cparser.y"
     { /*end_search(); */;}
     break;
 
   case 202:
 
 /* Line 1464 of yacc.c  */
-#line 677 "cparser.y"
+#line 679 "cparser.y"
     { /*UNBANG("Bad statement-seq."); */;}
     break;
 
   case 205:
 
 /* Line 1464 of yacc.c  */
-#line 680 "cparser.y"
+#line 682 "cparser.y"
     { /*UNBANG("Bad statement.");*/ ;}
     break;
 
   case 221:
 
 /* Line 1464 of yacc.c  */
-#line 707 "cparser.y"
+#line 709 "cparser.y"
     {/* unnest(); */;}
     break;
 
   case 222:
 
 /* Line 1464 of yacc.c  */
-#line 709 "cparser.y"
+#line 711 "cparser.y"
     { /*unnest(); UNBANG("Bad declaration-seq.");*/ ;}
     break;
 
   case 225:
 
 /* Line 1464 of yacc.c  */
-#line 712 "cparser.y"
+#line 714 "cparser.y"
     { /*UNBANG("Bad declaration."); */;}
     break;
 
   case 226:
 
 /* Line 1464 of yacc.c  */
-#line 713 "cparser.y"
+#line 715 "cparser.y"
     { /*end_search(); */;}
     break;
 
   case 316:
 
 /* Line 1464 of yacc.c  */
-#line 824 "cparser.y"
+#line 826 "cparser.y"
     {/* UNBANG("Bad enumerator-list.");*/ ;}
     break;
 
   case 318:
 
 /* Line 1464 of yacc.c  */
-#line 826 "cparser.y"
+#line 828 "cparser.y"
     { /*UNBANG("Bad enumerator-definition.");*/ ;}
     break;
 
   case 320:
 
 /* Line 1464 of yacc.c  */
-#line 828 "cparser.y"
+#line 830 "cparser.y"
     { /*UNBANG("Bad enumerator-definition.");*/ ;}
     break;
 
   case 408:
 
 /* Line 1464 of yacc.c  */
-#line 961 "cparser.y"
+#line 963 "cparser.y"
     {/* UNBANG("Bad initializer_clause."); */;}
     break;
 
   case 409:
 
 /* Line 1464 of yacc.c  */
-#line 963 "cparser.y"
+#line 965 "cparser.y"
     {/* UNBANG("Bad initializer_clause."); */;}
     break;
 
   case 412:
 
 /* Line 1464 of yacc.c  */
-#line 966 "cparser.y"
+#line 968 "cparser.y"
     {/* end_search(); */;}
     break;
 
   case 416:
 
 /* Line 1464 of yacc.c  */
-#line 984 "cparser.y"
+#line 986 "cparser.y"
     {/* mark(); */;}
     break;
 
   case 418:
 
 /* Line 1464 of yacc.c  */
-#line 986 "cparser.y"
+#line 988 "cparser.y"
     {/* rewind_colon();*/ ;}
     break;
 
   case 419:
 
 /* Line 1464 of yacc.c  */
-#line 987 "cparser.y"
+#line 989 "cparser.y"
     { /*unmark();*/ ;}
     break;
 
   case 427:
 
 /* Line 1464 of yacc.c  */
-#line 994 "cparser.y"
+#line 996 "cparser.y"
     { /*UNBANG("Bad member_specification.opt."); */;}
     break;
 
   case 430:
 
 /* Line 1464 of yacc.c  */
-#line 998 "cparser.y"
+#line 1000 "cparser.y"
     { /*UNBANG("Bad member-declaration."); */;}
     break;
 
   case 431:
 
 /* Line 1464 of yacc.c  */
-#line 999 "cparser.y"
+#line 1001 "cparser.y"
     {/* end_search(); */;}
     break;
 
   case 471:
 
 /* Line 1464 of yacc.c  */
-#line 1064 "cparser.y"
+#line 1066 "cparser.y"
     {/* UNBANG("Bad ctor-initializer."); */;}
     break;
 
   case 475:
 
 /* Line 1464 of yacc.c  */
-#line 1068 "cparser.y"
+#line 1070 "cparser.y"
     {/* UNBANG("Bad mem-initializer.");*/ ;}
     break;
 
   case 529:
 
 /* Line 1464 of yacc.c  */
-#line 1143 "cparser.y"
+#line 1145 "cparser.y"
     {/* UNBANG("Bad template-parameter."); */;}
     break;
 
   case 553:
 
 /* Line 1464 of yacc.c  */
-#line 1191 "cparser.y"
+#line 1193 "cparser.y"
     {/* yyerrok; yyclearin; advance_search(); */;}
     break;
 
   case 554:
 
 /* Line 1464 of yacc.c  */
-#line 1192 "cparser.y"
+#line 1194 "cparser.y"
     {/* suppress_parse_error = 1; */;}
     break;
 
   case 555:
 
 /* Line 1464 of yacc.c  */
-#line 1193 "cparser.y"
+#line 1195 "cparser.y"
     {/* mark(); */;}
     break;
 
   case 556:
 
 /* Line 1464 of yacc.c  */
-#line 1194 "cparser.y"
+#line 1196 "cparser.y"
     {/* nest(); */;}
     break;
 
   case 557:
 
 /* Line 1464 of yacc.c  */
-#line 1195 "cparser.y"
+#line 1197 "cparser.y"
     {/* start_search(false); */;}
     break;
 
   case 558:
 
 /* Line 1464 of yacc.c  */
-#line 1196 "cparser.y"
+#line 1198 "cparser.y"
     {/* start_search(true); */;}
     break;
 
 
 
 /* Line 1464 of yacc.c  */
-#line 3435 "cparser.tab.c"
+#line 3437 "cparser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -3643,6 +3645,20 @@ yyreturn:
 
 
 /* Line 1684 of yacc.c  */
-#line 1199 "cparser.y"
+#line 1201 "cparser.y"
 
 
+struct node * alacnary(int symbol, int prodRule, int children,...){
+	struct node * nd;
+	nd =  treenode(symbol);
+	nd->u.nt.production_rule = prodRule;
+	int c = 0;
+	va_list mylist;
+	va_start(mylist, children);
+	while(c < children){
+		nd->u.nt.child[c] = va_arg(mylist, struct node *);
+		c++;
+	}
+	va_end(mylist);
+	return nd;
+}

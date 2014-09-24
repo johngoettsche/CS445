@@ -1,53 +1,11 @@
 #include "120parse.h"
 
-int main(int argc, char **argv){
-/*
-	yytoken = (Token *)calloc(1, sizeof(Token));
-	//create token list
-	TokenList *head = (TokenList *)calloc(1, sizeof(TokenList));
-	if(head == NULL) memoryError();
-	TokenList *current = head;
-	current->t = NULL;
-	current->next = NULL;
-		
-   if(argc > 1) { 
-		int f;
-		//read each file in arguments
-		for(f = 1; f < argc; f++) {
-			fname = argv[f];
-			FILE *infile = fopen(fname, "r");
-			yyin = infile;
-			line_num = 1;
-			if(!yyin){
-				printf("Error reading file %s\n", argv[f]);
-				exit(1);
-			}
-			//create all tokens in file
-			while(yytoken = (Token *)yylex()){
-				if(current->t == NULL)current->t = yytoken;
-				else{
-					TokenList *item = (TokenList *)calloc(1, sizeof(TokenList));
-					if(item == NULL) memoryError();
-					item->t = yytoken;
-					item->next = NULL;
-   
-					current->next = item;
-					current = current->next;
-				}
-			}
-			close(infile);
-			yyrestart();
-		}
-	} else { //no files in arguments
-		printf("Missing file name.\n");
-		exit(1);
-	}
-	
-   printAllTokens(head);*/
-	printf("begin parse");
-	yyparse();
-	printf("done!");
-   return 0;
+TreeNode *treenode(int symbol)
+{
+	struct node *p = (struct node *)calloc(1, sizeof(struct node));
+	if (p == NULL) stop("out of memory in treenode constructor");
+	p->symbol = symbol;
+	return p;
 }
 
 TokenStackNode *createTokenStack(){
@@ -73,3 +31,28 @@ TokenStackNode *popTokenStack(TokenStackNode *top){
 TokenStackNode *topTokenStack(TokenStackNode *top){
 	return top;
 }
+
+int main(int argc, char **argv){
+	int rv;
+   if(argc > 1) { 
+		int f;
+		//read each file in arguments
+		for(f = 1; f < argc; f++) {
+			fname = argv[f];
+			FILE *infile = fopen(fname, "r");
+			yyin = infile;
+			line_num = 1;
+			if(!yyin){
+				printf("Error reading file %s\n", argv[f]);
+				exit(1);
+			}
+			rv = yyparse();
+			treeprint(yyroot);
+		}
+	} else { //no files in arguments
+		printf("Missing file name.\n");
+		exit(1);
+	}
+   return 0;
+}
+
