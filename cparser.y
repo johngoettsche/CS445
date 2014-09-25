@@ -934,32 +934,32 @@ function_specifier:
    | VIRTUAL																	{ $$ = alacnary(S_FUNCTION_SPECIFIER, FUNCTION_SPECIFIERr3, 1, $1); }
 
 type_specifier:                     
-	simple_type_specifier
-   | elaborate_type_specifier
-   | cv_qualifier
+	simple_type_specifier													{ $$ = alacnary(S_TYPE_SPECIFIER, TYPE_SPECIFIERr1, 1, $1); }
+   | elaborate_type_specifier												{ $$ = alacnary(S_TYPE_SPECIFIER, TYPE_SPECIFIERr2, 1, $1); }
+   | cv_qualifier																{ $$ = alacnary(S_TYPE_SPECIFIER, TYPE_SPECIFIERr3, 1, $1); }
 
 elaborate_type_specifier:           
-	class_specifier
-   | enum_specifier
-   | elaborated_type_specifier
-   | TEMPLATE elaborate_type_specifier
+	class_specifier															{ $$ = alacnary(S_ELABORATE_TYPE_SPECIFIER, ELABORATE_TYPE_SPECIFIERr1, 1, $1); }
+   | enum_specifier															{ $$ = alacnary(S_ELABORATE_TYPE_SPECIFIER, ELABORATE_TYPE_SPECIFIERr2, 1, $1); }
+   | elaborated_type_specifier											{ $$ = alacnary(S_ELABORATE_TYPE_SPECIFIER, ELABORATE_TYPE_SPECIFIERr3, 1, $1); }
+   | TEMPLATE elaborate_type_specifier									{ $$ = alacnary(S_ELABORATE_TYPE_SPECIFIER, ELABORATE_TYPE_SPECIFIERr4, 2, $1, $2); }
 	
 simple_type_specifier:              
-	scoped_id
-   | built_in_type_specifier
+	scoped_id																	{ $$ = alacnary(S_SIMPLE_TYPE_SPECIFIER, SIMPLE_TYPE_SPECIFIERr1, 1, $1); }
+   | built_in_type_specifier												{ $$ = alacnary(S_SIMPLE_TYPE_SPECIFIER, SIMPLE_TYPE_SPECIFIERr2, 1, $1); }
 	
 built_in_type_specifier:            
-	CHAR 
-	| WCHAR_T 
-	| BOOL 
-	| SHORT 
-	| INT 
-	| LONG 
-	| SIGNED 
-	| UNSIGNED 
-	| FLOAT 
-	| DOUBLE 
-	| VOID
+	CHAR 																			{ $$ = alacnary(S_BUILT_IN_TYPE_SPECIFIER, BUILT_IN_TYPE_SPECIFIERr1, 1, $1); }
+	| WCHAR_T 																	{ $$ = alacnary(S_BUILT_IN_TYPE_SPECIFIER, BUILT_IN_TYPE_SPECIFIERr2, 1, $1); }
+	| BOOL 																		{ $$ = alacnary(S_BUILT_IN_TYPE_SPECIFIER, BUILT_IN_TYPE_SPECIFIERr3, 1, $1); }
+	| SHORT 																		{ $$ = alacnary(S_BUILT_IN_TYPE_SPECIFIER, BUILT_IN_TYPE_SPECIFIERr4, 1, $1); }
+	| INT 																		{ $$ = alacnary(S_BUILT_IN_TYPE_SPECIFIER, BUILT_IN_TYPE_SPECIFIERr5, 1, $1); }
+	| LONG 																		{ $$ = alacnary(S_BUILT_IN_TYPE_SPECIFIER, BUILT_IN_TYPE_SPECIFIERr6, 1, $1); }
+	| SIGNED 																	{ $$ = alacnary(S_BUILT_IN_TYPE_SPECIFIER, BUILT_IN_TYPE_SPECIFIERr7, 1, $1); }
+	| UNSIGNED 																	{ $$ = alacnary(S_BUILT_IN_TYPE_SPECIFIER, BUILT_IN_TYPE_SPECIFIERr8, 1, $1); }
+	| FLOAT 																		{ $$ = alacnary(S_BUILT_IN_TYPE_SPECIFIER, BUILT_IN_TYPE_SPECIFIERr9, 1, $1); }
+	| DOUBLE 																	{ $$ = alacnary(S_BUILT_IN_TYPE_SPECIFIER, BUILT_IN_TYPE_SPECIFIERr10, 1, $1); }
+	| VOID																		{ $$ = alacnary(S_BUILT_IN_TYPE_SPECIFIER, BUILT_IN_TYPE_SPECIFIERr11, 1, $1); }
 
 /*
  *  The over-general use of declaration_expression to cover decl-specifier-seq.opt declarator in a function-definition means that
@@ -971,68 +971,71 @@ built_in_type_specifier:
  *  elaborated_type_specifier is correct.
  */
 elaborated_type_specifier:          
-	elaborated_class_specifier
-   | elaborated_enum_specifier
-   | TYPENAME scoped_id
+	elaborated_class_specifier												{ $$ = alacnary(S_ELABORATED_TYPE_SPECIFIER, ELABORATED_TYPE_SPECIFIERr1, 1, $1); }
+   | elaborated_enum_specifier											{ $$ = alacnary(S_ELABORATED_TYPE_SPECIFIER, ELABORATED_TYPE_SPECIFIERr2, 1, $1); }
+   | TYPENAME scoped_id														{ $$ = alacnary(S_ELABORATED_TYPE_SPECIFIER, ELABORATED_TYPE_SPECIFIERr3, 2, $1, $2); }
 
 elaborated_enum_specifier:          
-	ENUM scoped_id               %prec SHIFT_THERE
+	ENUM scoped_id              											{ $$ = alacnary(S_ELABORATED_ENUM_SPECIFIER, ELABORATED_ENUM_SPECIFIERr1, 2, $1, $2); }/*%prec SHIFT_THERE*/
 	
 enum_specifier:                     
-	ENUM scoped_id enumerator_clause
-   | ENUM enumerator_clause
+	ENUM scoped_id enumerator_clause										{ $$ = alacnary(S_ENUM_SPECIFIER, ENUM_SPECIFIERr1, 2, $1, $2); }
+   | ENUM enumerator_clause												{ $$ = alacnary(S_ENUM_SPECIFIER, ENUM_SPECIFIERr2, 2, $1, $2); }
 	
 enumerator_clause:                  
-	LC enumerator_list_ecarb
-   | LC enumerator_list enumerator_list_ecarb
-   | LC enumerator_list CM enumerator_definition_ecarb
+	LC enumerator_list_ecarb												{ $$ = alacnary(S_ENUMERATOR_CLAUSE, ENUMERATOR_CLAUSEr1, 2, $1, $2); }
+   | LC enumerator_list enumerator_list_ecarb						{ $$ = alacnary(S_ENUMERATOR_CLAUSE, ENUMERATOR_CLAUSEr2, 3, $1, $2, $3); }
+   | LC enumerator_list CM enumerator_definition_ecarb			{ $$ = alacnary(S_ENUMERATOR_CLAUSE, ENUMERATOR_CLAUSEr3, 4, $1, $2, $3, $4); }
 	
 enumerator_list_ecarb:              
-	RC
-   | bang error RC                                              {/* UNBANG("Bad enumerator-list.");*/ }
+	RC																				{ $$ = alacnary(S_ENUMERATOR_LIST_ECARB, ENUMERATOR_LIST_ECARBr1, 1, $1); }
+   | bang error RC                                             { $$ = alacnary(S_ENUMERATOR_LIST_ECARB, ENUMERATOR_LIST_ECARBr2, 3, $1, $2, $3); }
+																					/*{ UNBANG("Bad enumerator-list."); }*/
 	
 enumerator_definition_ecarb:        
-	RC
-   | bang error RC                                              { /*UNBANG("Bad enumerator-definition.");*/ }
+	RC																				{ $$ = alacnary(S_ENUMERATOR_DEFINITION_ECARB, ENUMERATOR_DEFINITION_ECARBr1, 1, $1); }
+   | bang error RC                                             { $$ = alacnary(S_ENUMERATOR_DEFINITION_ECARB, ENUMERATOR_DEFINITION_ECARBr2, 3, $1, $2, $3); } 
+																					/*{ UNBANG("Bad enumerator-definition."); } */
 	
 enumerator_definition_filler:       
-	/* empty */
-   | bang error CM                                              { /*UNBANG("Bad enumerator-definition.");*/ }
+	/* empty */																	{  }
+   | bang error CM                                             { $$ = alacnary(S_ENUMERATOR_DEFINITION_FILTER, ENUMERATOR_DEFINITION_FILTERr1, 3, $1, $2, $3); } 
+																					/*{ UNBANG("Bad enumerator-definition."); }*/
 	
 enumerator_list_head:               
-	enumerator_definition_filler
-   | enumerator_list CM enumerator_definition_filler
+	enumerator_definition_filler											{ $$ = alacnary(S_ENUMERATOR_LIST_HEAD, ENUMERATOR_LIST_HEADr1, 1, $1); } 
+   | enumerator_list CM enumerator_definition_filler				{ $$ = alacnary(S_ENUMERATOR_LIST_HEAD, ENUMERATOR_LIST_HEADr2, 3, $1, $2, $3); } 
 	
 enumerator_list:                    
-	enumerator_list_head enumerator_definition
+	enumerator_list_head enumerator_definition						{ $$ = alacnary(S_ENUMERATOR_LIST, ENUMERATOR_LISDr1, 2, $1, $2); } 
 	
 enumerator_definition:              
-	enumerator
-   | enumerator ASN constant_expression
+	enumerator																	{ $$ = alacnary(S_ENUMERATOR_DEFINITION, ENUMERATOR_DEFIITIONr1, 1, $1); } 
+   | enumerator ASN constant_expression								{ $$ = alacnary(S_ENUMERATOR_DEFINITION, ENUMERATOR_DEFIITIONr2, 3, $1, $2, $3); }
 	
 enumerator:                         
-	identifier
+	identifier																	{ $$ = alacnary(S_ENUMERATOR, ENUMERATORr1, 1, $1); } 
 
 namespace_definition:               
-	NAMESPACE scoped_id compound_declaration
-   | NAMESPACE compound_declaration
+	NAMESPACE scoped_id compound_declaration							{ $$ = alacnary(S_NAMESPACE_DEFINITION, NAMESPACE_DEFINITIONr1, 3, $1, $2, $3); } 
+   | NAMESPACE compound_declaration										{ $$ = alacnary(S_NAMESPACE_DEFINITION, NAMESPACE_DEFINITIONr2, 2, $1, $2); } 
 	
 namespace_alias_definition:         
-	NAMESPACE scoped_id ASN scoped_id SM
+	NAMESPACE scoped_id ASN scoped_id SM								{ $$ = alacnary(S_NAMESPACE_ALIAS_DEFINITION, NAMESPACE_ALILAS_DEFINITIONr1, 4, $1, $2, $3, $4); } 
 
 using_declaration:                  
-	USING declarator_id SM
-   | USING TYPENAME declarator_id SM
+	USING declarator_id SM													{ $$ = alacnary(S_USING_DELARATION, USING_DECLARATIONr1, 3, $1, $2, $3); } 
+   | USING TYPENAME declarator_id SM									{ $$ = alacnary(S_USING_DELARATION, USING_DECLARATIONr2, 4, $1, $2, $3, $4); } 
 
 using_directive:                    
-	USING NAMESPACE scoped_id SM
+	USING NAMESPACE scoped_id SM											{ $$ = alacnary(S_USING_DIRECTIVE, USING_DIRECTIVEr1, 4, $1, $2, $3, $4); } 
 	
 asm_definition:                     
-	ASM LP string RP SM
+	ASM LP string RP SM														{ $$ = alacnary(S_ASM_DEFINITION, ASM_DEFINITIONr1, 5, $1, $2, $3, $4, $5); }
 	
 linkage_specification:              
-	EXTERN string looping_declaration
-   | EXTERN string compound_declaration
+	EXTERN string looping_declaration									{ $$ = alacnary(S_LINKAGE_SPECIFICATION, LINKAGE_SPECIFICATIONr1, 3, $1, $2, $3); }
+   | EXTERN string compound_declaration								{ $$ = alacnary(S_LINKAGE_SPECIFICATION, LINKAGE_SPECIFICATIONr2, 3, $1, $2, $3); }
 
 /*---------------------------------------------------------------------------------------------------
  * A.7 Declarators
