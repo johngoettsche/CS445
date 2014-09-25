@@ -725,110 +725,133 @@ templated_expression_list:
  *  Parsing statements is easy once simple_declaration has been generalised to cover expression_statement.
  */
 looping_statement:                  
-	start_search looped_statement                               { /*end_search(); */}
+	start_search looped_statement                              	{ $$ = alacnary(S_LOOPING_STATEMENT, LOOPING_STATEMENTr1, 2, $1, $2); }/* { end_search(); }*/
 	
 looped_statement:                   
-	statement
-   | advance_search PLUS looped_statement
-   | advance_search MINUS
+	statement																	{ $$ = alacnary(S_LOOPED_STATEMENT, LOOPED_STATEMENTr1, 1, $1); }
+   | advance_search PLUS looped_statement								{ $$ = alacnary(S_LOOPED_STATEMENT, LOOPED_STATEMENTr2, 3, $1, $2, $3); }
+   | advance_search MINUS													{ $$ = alacnary(S_LOOPED_STATEMENT, LOOPED_STATEMENTr3, 2, $1, $2); }
 	
 statement:                          
-	control_statement
+	control_statement															{ $$ = alacnary(S_STATEMENT, STATEMENTr1, 1, $1); }
 /* | expression_statement                                        -- covered by declaration_statement */
-   | compound_statement
-   | declaration_statement
-   | try_block
+   | compound_statement														{ $$ = alacnary(S_STATEMENT, STATEMENTr2, 1, $1); }
+   | declaration_statement													{ $$ = alacnary(S_STATEMENT, STATEMENTr3, 1, $1); }
+   | try_block																	{ $$ = alacnary(S_STATEMENT, STATEMENTr4, 1, $1); }
 	
 control_statement:                  
-	labeled_statement
-   | selection_statement
-   | iteration_statement
-   | jump_statement
+	labeled_statement															{ $$ = alacnary(S_CONTROL_STATEMENT, CONTROL_STATEMENTr1, 1, $1); }
+   | selection_statement													{ $$ = alacnary(S_CONTROL_STATEMENT, CONTROL_STATEMENTr2, 1, $1); }
+   | iteration_statement													{ $$ = alacnary(S_CONTROL_STATEMENT, CONTROL_STATEMENTr3, 1, $1); }
+   | jump_statement															{ $$ = alacnary(S_CONTROL_STATEMENT, CONTROL_STATEMENTr4, 1, $1); }
 	
 labeled_statement:                  
-	identifier COLON looping_statement
-   | CASE constant_expression COLON looping_statement
-   | DEFAULT COLON looping_statement
+	identifier COLON looping_statement									{ $$ = alacnary(S_LABELED_STATEMENT, LABELED_STATEMENTr1, 3, $1, $2, $3); }
+   | CASE constant_expression COLON looping_statement				{ $$ = alacnary(S_LABELED_STATEMENT, LABELED_STATEMENTr2, 4, $1, $2, $3, $4); }
+   | DEFAULT COLON looping_statement									{ $$ = alacnary(S_LABELED_STATEMENT, LABELED_STATEMENTr3, 3, $1, $2, $3); }
 	
 /*expression_statement:             
 	expression.opt SM                                          -- covered by declaration_statement */
 	
 compound_statement:                 
-	LC statement_seq.opt RC
-   | LC statement_seq.opt looping_statement POUND bang error RC  { /*UNBANG("Bad statement-seq."); */}
+	LC statement_seq.opt RC													{ $$ = alacnary(S_COMPOUND_STATEMENT, COMPOUND_STATEMENTr1, 3, $1, $2, $3); }
+   | LC statement_seq.opt looping_statement POUND bang error RC { $$ = alacnary(S_COMPOUND_STATEMENT, COMPOUND_STATEMENTr2, 7, $1, $2, $3, $4, $5, $6, $7); }
+																					/*{ UNBANG("Bad statement-seq."); }*/
 	
 statement_seq.opt:                  
-	/* empty */
-   | statement_seq.opt looping_statement
-   | statement_seq.opt looping_statement POUND bang error SM      { /*UNBANG("Bad statement.");*/ }
+	/* empty */																	{  }
+   | statement_seq.opt looping_statement								{ $$ = alacnary(S_STATEMENT_SEQ_OPT, STATEMENT_SEQ_OPTr1, 2, $1, $2); }
+   | statement_seq.opt looping_statement POUND bang error SM   { $$ = alacnary(S_STATEMENT_SEQ_OPT, STATEMENT_SEQ_OPTr2, 6, $1, $2, $3, $4, $5, $6); }  
+																					/* { UNBANG("Bad statement."); }*/
 	
 /*
  *  The dangling else conflict is resolved to the innermost if.
  */
 selection_statement:                
-	IF LP condition RP looping_statement    %prec SHIFT_THERE
-   | IF LP condition RP looping_statement ELSE looping_statement
-   | SWITCH LP condition RP looping_statement
+	IF LP condition RP looping_statement   							{ $$ = alacnary(S_SELECTION_STATEMENT, SELECTION_STATEMENTr1, 5, $1, $2, $3, $4, $5); }/* %prec SHIFT_THERE */
+   | IF LP condition RP looping_statement ELSE looping_statement { $$ = alacnary(S_SELECTION_STATEMENT, SELECTION_STATEMENTr2, 7, $1, $2, $3, $4, $5, $6, $7); }
+   | SWITCH LP condition RP looping_statement						{ $$ = alacnary(S_SELECTION_STATEMENT, SELECTION_STATEMENTr3, 5, $1, $2, $3, $4, $5); }
 	
 condition.opt:                      
-	/* empty */
-   | condition
+	/* empty */																	{  }
+   | condition																	{ $$ = alacnary(S_CONDIION_OPT, CONDIION_OPTr1, 1, $1); }
 	
 condition:                          
-	parameter_declaration_list
+	parameter_declaration_list												{ $$ = alacnary(S_CONDIION, CONDIIONr1, 1, $1); }
 /* | expression                                                  -- covered by parameter_declaration_list */
 /* | type_specifier_seq declarator ASN assignment_expression     -- covered by parameter_declaration_list */
 
 iteration_statement:                
-	WHILE LP condition RP looping_statement
-   | DO looping_statement WHILE LP expression RP SM
+	WHILE LP condition RP looping_statement							{ $$ = alacnary(S_ITERATION_STATEMENT, ITERATION_STATEMENTr1, 5, $1, $2, $3, $4, $5); }
+   | DO looping_statement WHILE LP expression RP SM				{ $$ = alacnary(S_ITERATION_STATEMENT, ITERATION_STATEMENTr2, 7, $1, $2, $3, $4, $5, $6, $7); }
    | FOR LP for_init_statement condition.opt SM expression.opt RP looping_statement
+																					{ $$ = alacnary(S_ITERATION_STATEMENT, ITERATION_STATEMENTr3, 8, $1, $2, $3, $4, $5, $6, $7, $8); }
 
 for_init_statement:                 
-	simple_declaration
+	simple_declaration														{ $$ = alacnary(S_FOR_INIT_STATEMENT, FOR_INIT_STATEMENTr1, 1, $1); }
 /* | expression_statement                                        -- covered by simple_declaration */
 
 jump_statement:                     
-	BREAK SM
-   | CONTINUE SM
-   | RETURN expression.opt SM
-   | GOTO identifier SM
+	BREAK SM																		{ $$ = alacnary(S_JUMP_STATEMENT, JUMP_STATEMENTr1, 2, $1, $2); }
+   | CONTINUE SM																{ $$ = alacnary(S_JUMP_STATEMENT, JUMP_STATEMENTr2, 2, $1, $2); }
+   | RETURN expression.opt SM												{ $$ = alacnary(S_JUMP_STATEMENT, JUMP_STATEMENTr3, 3, $1, $2, $3); }
+   | GOTO identifier SM														{ $$ = alacnary(S_JUMP_STATEMENT, JUMP_STATEMENTr4, 3, $1, $2, $3); }
 	
-declaration_statement:              block_declaration
+declaration_statement:              
+	block_declaration															{ $$ = alacnary(S_DECLARATION_STATEMENT, DECLARATION_STATEMENTr1, 1, $1); }
 
 /*---------------------------------------------------------------------------------------------------
  * A.6 Declarations
  *---------------------------------------------------------------------------------------------------*/
-compound_declaration:               LC nest declaration_seq.opt RC                            {/* unnest(); */}
-    |                               LC nest declaration_seq.opt util looping_declaration POUND bang error RC
-                                                                                                { /*unnest(); UNBANG("Bad declaration-seq.");*/ }
-declaration_seq.opt:                /* empty */
-    |                               declaration_seq.opt util looping_declaration
-    |                               declaration_seq.opt util looping_declaration POUND bang error SM { /*UNBANG("Bad declaration."); */}
-looping_declaration:                start_search1 looped_declaration                            { /*end_search(); */}
-looped_declaration:                 declaration
-    |                               advance_search PLUS looped_declaration
-    |                               advance_search MINUS
-declaration:                        block_declaration
-    |                               function_definition
-    |                               template_declaration
-/*  |                               explicit_instantiation                                      -- covered by relevant declarations */
-    |                               explicit_specialization
-    |                               specialised_declaration
-specialised_declaration:            linkage_specification
-    |                               namespace_definition
-    |                               TEMPLATE specialised_declaration
-block_declaration:                  simple_declaration
-    |                               specialised_block_declaration
-specialised_block_declaration:      asm_definition
-    |                               namespace_alias_definition
-    |                               using_declaration
-    |                               using_directive
-    |                               TEMPLATE specialised_block_declaration
-simple_declaration:                 SM
-    |                               init_declaration SM
-    |                               init_declarations SM
-    |                               decl_specifier_prefix simple_declaration
+compound_declaration:               
+	LC nest declaration_seq.opt RC                            	{ $$ = alacnary(S_COMPOUND_DECLARATION, COMPOUND_DECLARATIONr1, 4, $1, $2, $3, $4); }/*{ unnest(); }*/
+   | LC nest declaration_seq.opt util looping_declaration POUND bang error RC
+																					{ $$ = alacnary(S_COMPOUND_DECLARATION, COMPOUND_DECLARATIONr2, 9, $1, $2, $3, $4, $5, $6, $7, $8, $9); }
+                                                                     { /*unnest(); UNBANG("Bad declaration-seq.");*/ }
+declaration_seq.opt:                
+	/* empty */																	{  }
+   | declaration_seq.opt util looping_declaration					{ $$ = alacnary(S_DECLARATION_SEQ_OPT, DECLARATION_SEQ_OPTr1, 3, $1, $2, $3); }
+   | declaration_seq.opt util looping_declaration POUND bang error SM 
+																					{ $$ = alacnary(S_DECLARATION_SEQ_OPT, DECLARATION_SEQ_OPTr2, 7, $1, $2, $3, $4, $5, $6, $7); }
+																					/*{ UNBANG("Bad declaration."); }*/
+	
+looping_declaration:                
+	start_search1 looped_declaration                            { $$ = alacnary(S_LOOPING_DECLARATION, LOOPING_DECLARATIONr1, 2, $1, $2); }/*{ end_search(); }*/
+	
+looped_declaration:                 
+	declaration																	{ $$ = alacnary(S_LOOPED_DECLARATION, LOOPED_DECLARATIONr1, 1, $1); }
+   | advance_search PLUS looped_declaration							{ $$ = alacnary(S_LOOPED_DECLARATION, LOOPED_DECLARATIONr2, 3, $1, $2, $3); }
+   | advance_search MINUS													{ $$ = alacnary(S_LOOPED_DECLARATION, LOOPED_DECLARATIONr3, 2, $1, $2); }
+	
+declaration:                        
+	block_declaration															{ $$ = alacnary(S_DECLARATION, DECLARATIONr1, 1, $1); }
+   | function_definition													{ $$ = alacnary(S_DECLARATION, DECLARATIONr2, 1, $1); }
+   | template_declaration													{ $$ = alacnary(S_DECLARATION, DECLARATIONr3, 1, $1); }
+/* | explicit_instantiation                                      -- covered by relevant declarations */
+   | explicit_specialization												{ $$ = alacnary(S_DECLARATION, DECLARATIONr4, 1, $1); }
+   | specialised_declaration												{ $$ = alacnary(S_DECLARATION, DECLARATIONr5, 1, $1); }
+	
+specialised_declaration:            
+	linkage_specification													{ $$ = alacnary(S_SPECIALISED_DECLARATION, SPECIALISED_DECLARATIONr1, 1, $1); }
+   | namespace_definition													{ $$ = alacnary(S_SPECIALISED_DECLARATION, SPECIALISED_DECLARATIONr2, 1, $1); }
+   | TEMPLATE specialised_declaration									{ $$ = alacnary(S_SPECIALISED_DECLARATION, SPECIALISED_DECLARATIONr3, 2, $1, $2); }
+	
+block_declaration:                  
+	simple_declaration														{ $$ = alacnary(S_BLOCK_DECLARATION, BLOCK_DECLARATIONr1, 1, $1); }
+   | specialised_block_declaration										{ $$ = alacnary(S_BLOCK_DECLARATION, BLOCK_DECLARATIONr2, 1, $1); }
+	
+specialised_block_declaration:      
+	asm_definition																{ $$ = alacnary(S_SPECIALISED_BLOCK_DECLARATION, SPECIALISED_BLOCK_DECLARATIONr1, 1, $1); }
+   | namespace_alias_definition											{ $$ = alacnary(S_SPECIALISED_BLOCK_DECLARATION, SPECIALISED_BLOCK_DECLARATIONr2, 1, $1); }
+   | using_declaration														{ $$ = alacnary(S_SPECIALISED_BLOCK_DECLARATION, SPECIALISED_BLOCK_DECLARATIONr3, 1, $1); }
+   | using_directive															{ $$ = alacnary(S_SPECIALISED_BLOCK_DECLARATION, SPECIALISED_BLOCK_DECLARATIONr4, 1, $1); }
+   | TEMPLATE specialised_block_declaration							{ $$ = alacnary(S_SPECIALISED_BLOCK_DECLARATION, SPECIALISED_BLOCK_DECLARATIONr5, 2, $1, $2); }
+	
+simple_declaration:                 
+	SM																				{ $$ = alacnary(S_SIMPLE_DECLARATION, SIMPLE_DECLARATIONr1, 1, $1); }
+   | init_declaration SM													{ $$ = alacnary(S_SIMPLE_DECLARATION, SIMPLE_DECLARATIONr2, 2, $1, $2); }
+   | init_declarations SM													{ $$ = alacnary(S_SIMPLE_DECLARATION, SIMPLE_DECLARATIONr3, 2, $1, $2); }
+   | decl_specifier_prefix simple_declaration						{ $$ = alacnary(S_SIMPLE_DECLARATION, SIMPLE_DECLARATIONr4, 2, $1, $2); }
 
 /*  A decl-specifier following a ptr_operator provokes a shift-reduce conflict for
  *      * const name
@@ -843,58 +866,100 @@ simple_declaration:                 SM
  *  by parsing from the right and attaching suffixes to the right-hand type. Finally
  *  residual prefixes attach to the left.                
  */
-suffix_built_in_decl_specifier.raw: built_in_type_specifier
-    |                               suffix_built_in_decl_specifier.raw built_in_type_specifier
-    |                               suffix_built_in_decl_specifier.raw decl_specifier_suffix
-suffix_built_in_decl_specifier:     suffix_built_in_decl_specifier.raw
-    |                               TEMPLATE suffix_built_in_decl_specifier
-suffix_named_decl_specifier:        scoped_id
-    |                               elaborate_type_specifier
-    |                               suffix_named_decl_specifier decl_specifier_suffix
-suffix_named_decl_specifier.bi:     suffix_named_decl_specifier
-    |                               suffix_named_decl_specifier suffix_built_in_decl_specifier.raw
-suffix_named_decl_specifiers:       suffix_named_decl_specifier.bi
-    |                               suffix_named_decl_specifiers suffix_named_decl_specifier.bi
-suffix_named_decl_specifiers.sf:    scoped_special_function_id          /* operators etc */
-    |                               suffix_named_decl_specifiers
-    |                               suffix_named_decl_specifiers scoped_special_function_id
-suffix_decl_specified_ids:          suffix_built_in_decl_specifier
-    |                               suffix_built_in_decl_specifier suffix_named_decl_specifiers.sf
-    |                               suffix_named_decl_specifiers.sf
-suffix_decl_specified_scope:        suffix_named_decl_specifiers SCOPE
-    |                               suffix_built_in_decl_specifier suffix_named_decl_specifiers SCOPE
-    |                               suffix_built_in_decl_specifier SCOPE
+suffix_built_in_decl_specifier.raw: 
+	built_in_type_specifier													{ $$ = alacnary(S_SUFFIX_BUILT_IN_DECL_SPECIFIER_RAW, SUFFIX_BUILT_IN_DECL_SPECIFIER_RAWr1, 1, $1); }
+   | suffix_built_in_decl_specifier.raw built_in_type_specifier { $$ = alacnary(S_SUFFIX_BUILT_IN_DECL_SPECIFIER_RAW, SUFFIX_BUILT_IN_DECL_SPECIFIER_RAWr2, 2, $1, $2); }
+   | suffix_built_in_decl_specifier.raw decl_specifier_suffix	{ $$ = alacnary(S_SUFFIX_BUILT_IN_DECL_SPECIFIER_RAW, SUFFIX_BUILT_IN_DECL_SPECIFIER_RAWr3, 2, $1, $2); }
+	
+suffix_built_in_decl_specifier:     
+	suffix_built_in_decl_specifier.raw									{ $$ = alacnary(S_SUFFIX_BUILT_IN_DECL_SPECIFIER, SUFFIX_BUILT_IN_DECL_SPECIFIERr1, 1, $1); }
+   | TEMPLATE suffix_built_in_decl_specifier							{ $$ = alacnary(S_SUFFIX_BUILT_IN_DECL_SPECIFIER, SUFFIX_BUILT_IN_DECL_SPECIFIERr2, 2, $1, $2); }
+	
+suffix_named_decl_specifier:        
+	scoped_id																	{ $$ = alacnary(S_SUFFIX_NAMED_DECL_SPECIFIER, SUFFIX_NAMED_DECL_SPECIFIERr1, 1, $1); }
+   | elaborate_type_specifier												{ $$ = alacnary(S_SUFFIX_NAMED_DECL_SPECIFIER, SUFFIX_NAMED_DECL_SPECIFIERr2, 1, $1); }
+   | suffix_named_decl_specifier decl_specifier_suffix			{ $$ = alacnary(S_SUFFIX_NAMED_DECL_SPECIFIER, SUFFIX_NAMED_DECL_SPECIFIERr3, 2, $1, $2); }
+	
+suffix_named_decl_specifier.bi:     
+	suffix_named_decl_specifier											{ $$ = alacnary(S_SUFFIX_NAMED_DECL_SPECIFIER_BI, SUFFIX_NAMED_DECL_SPECIFIER_BIr1, 1, $1); }
+   | suffix_named_decl_specifier suffix_built_in_decl_specifier.raw
+																					{ $$ = alacnary(S_SUFFIX_NAMED_DECL_SPECIFIER_BI, SUFFIX_NAMED_DECL_SPECIFIER_BIr2, 2, $1, $2); }
+	
+suffix_named_decl_specifiers:       
+	suffix_named_decl_specifier.bi										{ $$ = alacnary(S_SUFFIX_NAMED_DECL_SPECIFIERS, SUFFIX_NAMED_DECL_SPECIFIERSr1, 1, $1); }
+   | suffix_named_decl_specifiers suffix_named_decl_specifier.bi { $$ = alacnary(S_SUFFIX_NAMED_DECL_SPECIFIERS, SUFFIX_NAMED_DECL_SPECIFIERSr2, 2, $1, $2); }
+	
+suffix_named_decl_specifiers.sf:    
+	scoped_special_function_id          								{ $$ = alacnary(S_SUFFIX_NAMED_DECL_SPECIFIERS_SF, SUFFIX_NAMED_DECL_SPECIFIERS_SFr1, 1, $1); }/* operators etc */
+   | suffix_named_decl_specifiers										{ $$ = alacnary(S_SUFFIX_NAMED_DECL_SPECIFIERS_SF, SUFFIX_NAMED_DECL_SPECIFIERS_SFr2, 1, $1); }
+   | suffix_named_decl_specifiers scoped_special_function_id	{ $$ = alacnary(S_SUFFIX_NAMED_DECL_SPECIFIERS_SF, SUFFIX_NAMED_DECL_SPECIFIERS_SFr3, 2, $1, $2); }
+	
+suffix_decl_specified_ids:          
+	suffix_built_in_decl_specifier										{ $$ = alacnary(S_SUFFIX_DECL_SPECIFIED_IDS, SUFFIX_DECL_SPECIFIED_IDSr1, 1, $1); }
+   | suffix_built_in_decl_specifier suffix_named_decl_specifiers.sf
+																					{ $$ = alacnary(S_SUFFIX_DECL_SPECIFIED_IDS, SUFFIX_DECL_SPECIFIED_IDSr2, 2, $1, $2); }
+   | suffix_named_decl_specifiers.sf									{ $$ = alacnary(S_SUFFIX_DECL_SPECIFIED_IDS, SUFFIX_DECL_SPECIFIED_IDSr3, 1, $1); }
+	
+suffix_decl_specified_scope:        
+	suffix_named_decl_specifiers SCOPE									{ $$ = alacnary(S_SUFFIX_DECL_SPECIFIED_SCOPE, SUFFIX_DECL_SPECIFIED_SCOPEr1, 2, $1, $2); }
+   | suffix_built_in_decl_specifier suffix_named_decl_specifiers SCOPE
+																					{ $$ = alacnary(S_SUFFIX_DECL_SPECIFIED_SCOPE, SUFFIX_DECL_SPECIFIED_SCOPEr2, 3, $1, $2, $3); }
+   | suffix_built_in_decl_specifier SCOPE								{ $$ = alacnary(S_SUFFIX_DECL_SPECIFIED_SCOPE, SUFFIX_DECL_SPECIFIED_SCOPEr3, 2, $1, $2); }
 
-decl_specifier_affix:               storage_class_specifier
-    |                               function_specifier
-    |                               FRIEND                                                          
-    |                               TYPEDEF
-    |                               cv_qualifier
+decl_specifier_affix:               
+	storage_class_specifier													{ $$ = alacnary(S_DECL_SPECIFIER_AFFIX, DECL_SPECIFIER_AFFIXr1, 1, $1); }
+   | function_specifier														{ $$ = alacnary(S_DECL_SPECIFIER_AFFIX, DECL_SPECIFIER_AFFIXr2, 1, $1); }
+   | FRIEND                                                    { $$ = alacnary(S_DECL_SPECIFIER_AFFIX, DECL_SPECIFIER_AFFIXr3, 1, $1); }
+   | TYPEDEF																	{ $$ = alacnary(S_DECL_SPECIFIER_AFFIX, DECL_SPECIFIER_AFFIXr4, 1, $1); }
+   | cv_qualifier																{ $$ = alacnary(S_DECL_SPECIFIER_AFFIX, DECL_SPECIFIER_AFFIXr5, 1, $1); }
 
-decl_specifier_suffix:              decl_specifier_affix
+decl_specifier_suffix:              
+	decl_specifier_affix														{ $$ = alacnary(S_DECL_SPECIFIER_SUFFIX, DECL_SPECIFIER_SUFFIXr1, 1, $1); }
 
-decl_specifier_prefix:              decl_specifier_affix
-    |                               TEMPLATE decl_specifier_prefix
+decl_specifier_prefix:              
+	decl_specifier_affix														{ $$ = alacnary(S_DECL_SPECIFIER_PREFIX, DECL_SPECIFIER_PREFIXr1, 1, $1); }
+   | TEMPLATE decl_specifier_prefix										{ $$ = alacnary(S_DECL_SPECIFIER_PREFIX, DECL_SPECIFIER_PREFIXr2, 2, $1, $2); }
 
-storage_class_specifier:            REGISTER | STATIC | MUTABLE
-    |                               EXTERN                  %prec SHIFT_THERE                   /* Prefer linkage specification */
-    |                               AUTO
+storage_class_specifier:            
+	REGISTER 																	{ $$ = alacnary(S_STORAGE_CLASS_SPECIFIER, STORAGE_CLASS_SPECIFIERr1, 1, $1); }
+	| STATIC 																	{ $$ = alacnary(S_STORAGE_CLASS_SPECIFIER, STORAGE_CLASS_SPECIFIERr2, 1, $1); }
+	| MUTABLE																	{ $$ = alacnary(S_STORAGE_CLASS_SPECIFIER, STORAGE_CLASS_SPECIFIERr3, 1, $1); }
+   | EXTERN                 												{ $$ = alacnary(S_STORAGE_CLASS_SPECIFIER, STORAGE_CLASS_SPECIFIERr4, 1, $1); }
+																					/* %prec SHIFT_THERE */                  /* Prefer linkage specification */
+   | AUTO																		{ $$ = alacnary(S_STORAGE_CLASS_SPECIFIER, STORAGE_CLASS_SPECIFIERr5, 1, $1); }
 
-function_specifier:                 EXPLICIT
-    |                               INLINE
-    |                               VIRTUAL
+function_specifier:                 
+	EXPLICIT																		{ $$ = alacnary(S_FUNCTION_SPECIFIER, FUNCTION_SPECIFIERr1, 1, $1); }
+   | INLINE																		{ $$ = alacnary(S_FUNCTION_SPECIFIER, FUNCTION_SPECIFIERr2, 1, $1); }
+   | VIRTUAL																	{ $$ = alacnary(S_FUNCTION_SPECIFIER, FUNCTION_SPECIFIERr3, 1, $1); }
 
-type_specifier:                     simple_type_specifier
-    |                               elaborate_type_specifier
-    |                               cv_qualifier
+type_specifier:                     
+	simple_type_specifier
+   | elaborate_type_specifier
+   | cv_qualifier
 
-elaborate_type_specifier:           class_specifier
-    |                               enum_specifier
-    |                               elaborated_type_specifier
-    |                               TEMPLATE elaborate_type_specifier
-simple_type_specifier:              scoped_id
-    |                               built_in_type_specifier
-built_in_type_specifier:            CHAR | WCHAR_T | BOOL | SHORT | INT | LONG | SIGNED | UNSIGNED | FLOAT | DOUBLE | VOID
+elaborate_type_specifier:           
+	class_specifier
+   | enum_specifier
+   | elaborated_type_specifier
+   | TEMPLATE elaborate_type_specifier
+	
+simple_type_specifier:              
+	scoped_id
+   | built_in_type_specifier
+	
+built_in_type_specifier:            
+	CHAR 
+	| WCHAR_T 
+	| BOOL 
+	| SHORT 
+	| INT 
+	| LONG 
+	| SIGNED 
+	| UNSIGNED 
+	| FLOAT 
+	| DOUBLE 
+	| VOID
 
 /*
  *  The over-general use of declaration_expression to cover decl-specifier-seq.opt declarator in a function-definition means that
@@ -905,95 +970,153 @@ built_in_type_specifier:            CHAR | WCHAR_T | BOOL | SHORT | INT | LONG |
  *  The function-definition is not syntactically valid so resolving the false conflict in favour of the
  *  elaborated_type_specifier is correct.
  */
-elaborated_type_specifier:          elaborated_class_specifier
-    |                               elaborated_enum_specifier
-    |                               TYPENAME scoped_id
+elaborated_type_specifier:          
+	elaborated_class_specifier
+   | elaborated_enum_specifier
+   | TYPENAME scoped_id
 
-elaborated_enum_specifier:          ENUM scoped_id               %prec SHIFT_THERE
-enum_specifier:                     ENUM scoped_id enumerator_clause
-    |                               ENUM enumerator_clause
-enumerator_clause:                  LC enumerator_list_ecarb
-    |                               LC enumerator_list enumerator_list_ecarb
-    |                               LC enumerator_list CM enumerator_definition_ecarb
-enumerator_list_ecarb:              RC
-    |                               bang error RC                                              {/* UNBANG("Bad enumerator-list.");*/ }
-enumerator_definition_ecarb:        RC
-    |                               bang error RC                                              { /*UNBANG("Bad enumerator-definition.");*/ }
-enumerator_definition_filler:       /* empty */
-    |                               bang error CM                                              { /*UNBANG("Bad enumerator-definition.");*/ }
-enumerator_list_head:               enumerator_definition_filler
-    |                               enumerator_list CM enumerator_definition_filler
-enumerator_list:                    enumerator_list_head enumerator_definition
-enumerator_definition:              enumerator
-    |                               enumerator ASN constant_expression
-enumerator:                         identifier
+elaborated_enum_specifier:          
+	ENUM scoped_id               %prec SHIFT_THERE
+	
+enum_specifier:                     
+	ENUM scoped_id enumerator_clause
+   | ENUM enumerator_clause
+	
+enumerator_clause:                  
+	LC enumerator_list_ecarb
+   | LC enumerator_list enumerator_list_ecarb
+   | LC enumerator_list CM enumerator_definition_ecarb
+	
+enumerator_list_ecarb:              
+	RC
+   | bang error RC                                              {/* UNBANG("Bad enumerator-list.");*/ }
+	
+enumerator_definition_ecarb:        
+	RC
+   | bang error RC                                              { /*UNBANG("Bad enumerator-definition.");*/ }
+	
+enumerator_definition_filler:       
+	/* empty */
+   | bang error CM                                              { /*UNBANG("Bad enumerator-definition.");*/ }
+	
+enumerator_list_head:               
+	enumerator_definition_filler
+   | enumerator_list CM enumerator_definition_filler
+	
+enumerator_list:                    
+	enumerator_list_head enumerator_definition
+	
+enumerator_definition:              
+	enumerator
+   | enumerator ASN constant_expression
+	
+enumerator:                         
+	identifier
 
-namespace_definition:               NAMESPACE scoped_id compound_declaration
-    |                               NAMESPACE compound_declaration
-namespace_alias_definition:         NAMESPACE scoped_id ASN scoped_id SM
+namespace_definition:               
+	NAMESPACE scoped_id compound_declaration
+   | NAMESPACE compound_declaration
+	
+namespace_alias_definition:         
+	NAMESPACE scoped_id ASN scoped_id SM
 
-using_declaration:                  USING declarator_id SM
-    |                               USING TYPENAME declarator_id SM
+using_declaration:                  
+	USING declarator_id SM
+   | USING TYPENAME declarator_id SM
 
-using_directive:                    USING NAMESPACE scoped_id SM
-asm_definition:                     ASM LP string RP SM
-linkage_specification:              EXTERN string looping_declaration
-    |                               EXTERN string compound_declaration
+using_directive:                    
+	USING NAMESPACE scoped_id SM
+	
+asm_definition:                     
+	ASM LP string RP SM
+	
+linkage_specification:              
+	EXTERN string looping_declaration
+   | EXTERN string compound_declaration
 
 /*---------------------------------------------------------------------------------------------------
  * A.7 Declarators
  *---------------------------------------------------------------------------------------------------*/
 /*init-declarator is named init_declaration to reflect the embedded decl-specifier-seq.opt*/
-init_declarations:                  assignment_expression CM init_declaration
-    |                               init_declarations CM init_declaration
-init_declaration:                   assignment_expression
-/*  |                               assignment_expression ASN initializer_clause                -- covered by assignment_expression */
-/*  |                               assignment_expression LP expression_list RP               -- covered by another set of call arguments */
+init_declarations:                  
+	assignment_expression CM init_declaration
+   | init_declarations CM init_declaration
+	
+init_declaration:                   
+	assignment_expression
+/* | assignment_expression ASN initializer_clause                -- covered by assignment_expression */
+/* | assignment_expression LP expression_list RP               -- covered by another set of call arguments */
 
 /*declarator:                                                                                   -- covered by assignment_expression */
 /*direct_declarator:                                                                            -- covered by postfix_expression */
 
-star_ptr_operator:                  MUL
-    |                               star_ptr_operator cv_qualifier
-nested_ptr_operator:                star_ptr_operator
-    |                               id_scope nested_ptr_operator
-ptr_operator:                       AND
-    |                               nested_ptr_operator
-    |                               global_scope nested_ptr_operator
-ptr_operator_seq:                   ptr_operator
-    |                               ptr_operator ptr_operator_seq
+star_ptr_operator:                  
+	MUL
+   | star_ptr_operator cv_qualifier
+	
+nested_ptr_operator:                
+	star_ptr_operator
+   | id_scope nested_ptr_operator
+	
+ptr_operator:                       
+	AND
+   | nested_ptr_operator
+   | global_scope nested_ptr_operator
+	
+ptr_operator_seq:                   
+	ptr_operator
+   | ptr_operator ptr_operator_seq
+	
 /* Independently coded to localise the shift-reduce conflict: sharing just needs another %prec */
-ptr_operator_seq.opt:               /* empty */                         %prec SHIFT_THERE       /* Maximise type length */
-    |                               ptr_operator ptr_operator_seq.opt
+ptr_operator_seq.opt:               
+	/* empty */                         %prec SHIFT_THERE       /* Maximise type length */
+   | ptr_operator ptr_operator_seq.opt
 
-cv_qualifier_seq.opt:               /* empty */
-    |                               cv_qualifier_seq.opt cv_qualifier
-cv_qualifier:                       CONST | VOLATILE
+cv_qualifier_seq.opt:               
+	/* empty */
+   | cv_qualifier_seq.opt cv_qualifier
+	
+cv_qualifier:                       
+	CONST 
+	| VOLATILE
 
 /*type_id                                                                                       -- also covered by parameter declaration */
-type_id:                            type_specifier abstract_declarator.opt
-    |                               type_specifier type_id
+type_id:                            
+	type_specifier abstract_declarator.opt
+   | type_specifier type_id
 
 /*abstract_declarator:                                                                          -- also covered by parameter declaration */
-abstract_declarator.opt:            /* empty */
-    |                               ptr_operator abstract_declarator.opt
-    |                               direct_abstract_declarator
-direct_abstract_declarator.opt:     /* empty */
-    |                               direct_abstract_declarator
-direct_abstract_declarator:         direct_abstract_declarator.opt parenthesis_clause
-    |                               direct_abstract_declarator.opt LB RB
-    |                               direct_abstract_declarator.opt LB constant_expression RB
-/*  |                               LP abstract_declarator RP                                 -- covered by parenthesis_clause */
+abstract_declarator.opt:            
+	/* empty */
+   | ptr_operator abstract_declarator.opt
+   | direct_abstract_declarator
+	
+direct_abstract_declarator.opt:     
+	/* empty */
+   | direct_abstract_declarator
+	
+direct_abstract_declarator:         
+	direct_abstract_declarator.opt parenthesis_clause
+   | direct_abstract_declarator.opt LB RB
+   | direct_abstract_declarator.opt LB constant_expression RB
+/* | LP abstract_declarator RP                                 -- covered by parenthesis_clause */
 
-parenthesis_clause:                 parameters_clause cv_qualifier_seq.opt
-    |                               parameters_clause cv_qualifier_seq.opt exception_specification
-parameters_clause:                  LP parameter_declaration_clause RP
+parenthesis_clause:                 
+	parameters_clause cv_qualifier_seq.opt
+   | parameters_clause cv_qualifier_seq.opt exception_specification
+	
+parameters_clause:                  
+	LP parameter_declaration_clause RP
+	
 /* parameter_declaration_clause also covers init_declaration, type_id, declarator and abstract_declarator. */
-parameter_declaration_clause:       /* empty */
-    |                               parameter_declaration_list
-    |                               parameter_declaration_list ELLIPSIS
-parameter_declaration_list:         parameter_declaration
-    |                               parameter_declaration_list CM parameter_declaration
+parameter_declaration_clause:       
+	/* empty */
+   | parameter_declaration_list
+   | parameter_declaration_list ELLIPSIS
+	
+parameter_declaration_list:         
+	parameter_declaration
+   | parameter_declaration_list CM parameter_declaration
 
 /*
  * A typed abstract qualifier such as
@@ -1001,46 +1124,68 @@ parameter_declaration_list:         parameter_declaration
  * looks like a multiply, so pointers are parsed as their binary operation equivalents that
  * ultimately terminate with a degenerate right hand term.
  */
-abstract_pointer_declaration:       ptr_operator_seq
-    |                               multiplicative_expression star_ptr_operator ptr_operator_seq.opt
-abstract_parameter_declaration:     abstract_pointer_declaration
-    |                               and_expression AND
-    |                               and_expression AND abstract_pointer_declaration
-special_parameter_declaration:      abstract_parameter_declaration
-    |                               abstract_parameter_declaration ASN assignment_expression
-    |                               ELLIPSIS
-parameter_declaration:              assignment_expression
-    |                               special_parameter_declaration
-    |                               decl_specifier_prefix parameter_declaration
+abstract_pointer_declaration:       
+	ptr_operator_seq
+   | multiplicative_expression star_ptr_operator ptr_operator_seq.opt
+	
+abstract_parameter_declaration:     
+	abstract_pointer_declaration
+   | and_expression AND
+   | and_expression AND abstract_pointer_declaration
+	
+special_parameter_declaration:      
+	abstract_parameter_declaration
+   | abstract_parameter_declaration ASN assignment_expression
+   | ELLIPSIS
+	
+parameter_declaration:              
+	assignment_expression
+   | special_parameter_declaration
+   | decl_specifier_prefix parameter_declaration
 
 /*  The grammar is repeated for use within template <>
  */
-templated_parameter_declaration:    templated_assignment_expression
-    |                               templated_abstract_declaration
-    |                               templated_abstract_declaration ASN templated_assignment_expression
-
-    |                               decl_specifier_prefix templated_parameter_declaration
-templated_abstract_declaration:     abstract_pointer_declaration
-    |                               templated_and_expression AND
-    |                               templated_and_expression AND abstract_pointer_declaration
+templated_parameter_declaration:    
+	templated_assignment_expression
+   | templated_abstract_declaration
+   | templated_abstract_declaration ASN templated_assignment_expression
+   | decl_specifier_prefix templated_parameter_declaration
+	
+templated_abstract_declaration:     
+	abstract_pointer_declaration
+   | templated_and_expression AND
+   | templated_and_expression AND abstract_pointer_declaration
 
 /*  function_definition includes constructor, destructor, implicit int definitions too.
  *  A local destructor is successfully parsed as a function-declaration but the ~ was treated as a unary operator.
  *  constructor_head is the prefix ambiguity between a constructor and a member-init-list starting with a bit-field.
  */
-function_definition:                ctor_definition
-    |                               func_definition
-func_definition:                    assignment_expression function_try_block
-    |                               assignment_expression function_body
-    |                               decl_specifier_prefix func_definition
-ctor_definition:                    constructor_head function_try_block
-    |                               constructor_head function_body
-    |                               decl_specifier_prefix ctor_definition
-constructor_head:                   bit_field_init_declaration
-    |                               constructor_head CM assignment_expression
-function_try_block:                 TRY function_block handler_seq
-function_block:                     ctor_initializer.opt function_body
-function_body:                      compound_statement
+function_definition:                
+	ctor_definition
+   | func_definition
+	
+func_definition:                    
+	assignment_expression function_try_block
+   | assignment_expression function_body
+   | decl_specifier_prefix func_definition
+	
+ctor_definition:                    
+	constructor_head function_try_block
+   | constructor_head function_body
+   | decl_specifier_prefix ctor_definition
+	
+constructor_head:                   
+	bit_field_init_declaration
+   | constructor_head CM assignment_expression
+	
+function_try_block:                 
+	TRY function_block handler_seq
+	
+function_block:                     
+	ctor_initializer.opt function_body
+	
+function_body:                      
+	compound_statement
 
 /*
  *  An = initializer looks like an extended assignment_expression.
@@ -1048,20 +1193,28 @@ function_body:                      compound_statement
  *  initializer is therefore flattened into its generalised customers.
  *initializer:                      ASN initializer_clause                                      -- flattened into caller
  *  |                               LP expression_list RP                                     -- flattened into caller */
-initializer_clause:                 assignment_expression
-    |                               braced_initializer
-braced_initializer:                 LC initializer_list RC
-    |                               LC initializer_list CM RC
-    |                               LC RC
-    |                               LC looping_initializer_clause POUND bang error RC           {/* UNBANG("Bad initializer_clause."); */}
-    |                               LC initializer_list CM looping_initializer_clause POUND bang error RC
+initializer_clause:                 
+	assignment_expression
+   | braced_initializer
+	
+braced_initializer:                 
+	LC initializer_list RC
+   | LC initializer_list CM RC
+   | LC RC
+   | LC looping_initializer_clause POUND bang error RC           {/* UNBANG("Bad initializer_clause."); */}
+   | LC initializer_list CM looping_initializer_clause POUND bang error RC
                                                                                                 {/* UNBANG("Bad initializer_clause."); */}
-initializer_list:                   looping_initializer_clause
-    |                               initializer_list CM looping_initializer_clause
-looping_initializer_clause:         start_search looped_initializer_clause                      {/* end_search(); */}
-looped_initializer_clause:          initializer_clause
-    |                               advance_search PLUS looped_initializer_clause
-    |                               advance_search MINUS
+initializer_list:                   
+	looping_initializer_clause
+   | initializer_list CM looping_initializer_clause
+	
+looping_initializer_clause:         
+	start_search looped_initializer_clause                      {/* end_search(); */}
+	
+looped_initializer_clause:          
+	initializer_clause
+   | advance_search PLUS looped_initializer_clause
+   | advance_search MINUS
 
 /*---------------------------------------------------------------------------------------------------
  * A.8 Classes
@@ -1076,76 +1229,121 @@ looped_initializer_clause:          initializer_clause
  *  the correct choice so we unmark and continue. If we fail to find the { an error token causes back-tracking
  *  to the alternative parse in elaborated_type_specifier which regenerates the : and declares unconditional success.
  */
-colon_mark:                         COLON                                                         {/* mark(); */}
-elaborated_class_specifier:         class_key scoped_id                    %prec SHIFT_THERE
-    |                               class_key scoped_id colon_mark error                        {/* rewind_colon();*/ }
-class_specifier_head:               class_key scoped_id colon_mark base_specifier_list LC      { /*unmark();*/ }
-    |                               class_key COLON base_specifier_list LC
-    |                               class_key scoped_id LC
-    |                               class_key LC
-class_key:                          CLASS | STRUCT | UNION
-class_specifier:                    class_specifier_head member_specification.opt RC
-    |                               class_specifier_head member_specification.opt util looping_member_declaration POUND bang error RC
+colon_mark:                         
+	COLON                                                         {/* mark(); */}
+	
+elaborated_class_specifier:         
+	class_key scoped_id                    %prec SHIFT_THERE
+   | class_key scoped_id colon_mark error                        {/* rewind_colon();*/ }
+	
+class_specifier_head:               
+	class_key scoped_id colon_mark base_specifier_list LC      { /*unmark();*/ }
+   | class_key COLON base_specifier_list LC
+   | class_key scoped_id LC
+   | class_key LC
+	
+class_key:                          
+	CLASS 
+	| STRUCT 
+	| UNION
+	
+class_specifier:                    
+	class_specifier_head member_specification.opt RC
+   | class_specifier_head member_specification.opt util looping_member_declaration POUND bang error RC
                                             { /*UNBANG("Bad member_specification.opt."); */}
-member_specification.opt:           /* empty */
-    |                               member_specification.opt util looping_member_declaration
-    |                               member_specification.opt util looping_member_declaration POUND bang error SM
-                                                                                                { /*UNBANG("Bad member-declaration."); */}
-looping_member_declaration:         start_search looped_member_declaration                      {/* end_search(); */}
-looped_member_declaration:          member_declaration
-    |                               advance_search PLUS looped_member_declaration
-    |                               advance_search MINUS
-member_declaration:                 accessibility_specifier
-    |                               simple_member_declaration
-    |                               function_definition
-/*  |                               function_definition SM                                     -- trailing ; covered by null declaration */
-/*  |                               qualified_id SM                                            -- covered by simple_member_declaration */
-    |                               using_declaration
-    |                               template_declaration
+														  
+member_specification.opt:           
+	/* empty */
+   | member_specification.opt util looping_member_declaration
+   | member_specification.opt util looping_member_declaration POUND bang error SM
+                                             { /*UNBANG("Bad member-declaration."); */}
+															
+looping_member_declaration:         
+	start_search looped_member_declaration                      {/* end_search(); */}
+	
+looped_member_declaration:          
+	member_declaration
+   | advance_search PLUS looped_member_declaration
+   | advance_search MINUS
+	
+member_declaration:                 
+	accessibility_specifier
+   | simple_member_declaration
+   | function_definition
+/* | function_definition SM                                     -- trailing ; covered by null declaration */
+/* | qualified_id SM                                            -- covered by simple_member_declaration */
+   | using_declaration
+   | template_declaration
 
 /*  The generality of constructor names (there need be no parenthesised argument list) means that that
  *          name : f(g), h(i)
  *  could be the start of a constructor or the start of an anonymous bit-field. An ambiguity is avoided by
  *  parsing the ctor-initializer of a function_definition as a bit-field.
  */
-simple_member_declaration:          SM
-    |                               assignment_expression SM
-    |                               constructor_head SM
-    |                               member_init_declarations SM
-    |                               decl_specifier_prefix simple_member_declaration
-member_init_declarations:           assignment_expression CM member_init_declaration
-    |                               constructor_head CM bit_field_init_declaration
-    |                               member_init_declarations CM member_init_declaration
-member_init_declaration:            assignment_expression
-/*  |                               assignment_expression ASN initializer_clause                -- covered by assignment_expression */
-/*  |                               assignment_expression LP expression_list RP               -- covered by another set of call arguments */
-    |                               bit_field_init_declaration
-accessibility_specifier:            access_specifier COLON
-bit_field_declaration:              assignment_expression COLON bit_field_width
-    |                               COLON bit_field_width
-bit_field_width:                    logical_or_expression
-/*  |                               logical_or_expression QUEST expression COLON assignment_expression  -- has SR conflict w.r.t later = */
-    |                               logical_or_expression QUEST bit_field_width COLON bit_field_width
-bit_field_init_declaration:         bit_field_declaration
-    |                               bit_field_declaration ASN initializer_clause
+simple_member_declaration:          
+	SM
+	| assignment_expression SM
+   | constructor_head SM
+   | member_init_declarations SM
+   | decl_specifier_prefix simple_member_declaration
+	
+member_init_declarations:           
+	assignment_expression CM member_init_declaration
+   | constructor_head CM bit_field_init_declaration
+   | member_init_declarations CM member_init_declaration
+	
+member_init_declaration:            
+	assignment_expression
+/* | assignment_expression ASN initializer_clause                -- covered by assignment_expression */
+/* | assignment_expression LP expression_list RP               -- covered by another set of call arguments */
+   | bit_field_init_declaration
+	
+accessibility_specifier:            
+	access_specifier COLON
+	
+bit_field_declaration:              
+	assignment_expression COLON bit_field_width
+   | COLON bit_field_width
+	
+bit_field_width:                    
+	logical_or_expression
+/* | logical_or_expression QUEST expression COLON assignment_expression  -- has SR conflict w.r.t later = */
+   | logical_or_expression QUEST bit_field_width COLON bit_field_width
+	
+bit_field_init_declaration:         
+	bit_field_declaration
+   | bit_field_declaration ASN initializer_clause
 
 /*---------------------------------------------------------------------------------------------------
  * A.9 Derived classes
  *---------------------------------------------------------------------------------------------------*/
-/*base_clause:                      COLON base_specifier_list                                     -- flattened */
-base_specifier_list:                base_specifier
-    |                               base_specifier_list CM base_specifier
-base_specifier:                     scoped_id
-    |                               access_specifier base_specifier
-    |                               VIRTUAL base_specifier
-access_specifier:                   PRIVATE | PROTECTED | PUBLIC
+/*base_clause:                      
+	COLON base_specifier_list                                     -- flattened */
+	
+base_specifier_list:                
+	base_specifier
+   | base_specifier_list CM base_specifier
+	
+base_specifier:                     
+	scoped_id
+   | access_specifier base_specifier
+   | VIRTUAL base_specifier
+	
+access_specifier:                   
+	PRIVATE 
+	| PROTECTED 
+	| PUBLIC
 
 /*---------------------------------------------------------------------------------------------------
  * A.10 Special member functions
  *---------------------------------------------------------------------------------------------------*/
-conversion_function_id:             OPERATOR conversion_type_id
-conversion_type_id:                 type_specifier ptr_operator_seq.opt
-    |                               type_specifier conversion_type_id
+conversion_function_id:             
+	OPERATOR conversion_type_id
+	
+conversion_type_id:                 
+	type_specifier ptr_operator_seq.opt
+   | type_specifier conversion_type_id
+	
 /*
  *  Ctor-initialisers can look like a bit field declaration, given the generalisation of names:
  *      Class(Type) : m1(1), m2(2) { }
@@ -1153,21 +1351,34 @@ conversion_type_id:                 type_specifier ptr_operator_seq.opt
  *  The grammar below is used within a function_try_block or function_definition.
  *  See simple_member_declaration for use in normal member function_definition.
  */
-ctor_initializer.opt:               /* empty */
-    |                               ctor_initializer
-ctor_initializer:                   COLON mem_initializer_list
-    |                               COLON mem_initializer_list bang error                         {/* UNBANG("Bad ctor-initializer."); */}
-mem_initializer_list:               mem_initializer
-    |                               mem_initializer_list_head mem_initializer
-mem_initializer_list_head:          mem_initializer_list CM
-    |                               mem_initializer_list bang error CM                         {/* UNBANG("Bad mem-initializer.");*/ }
-mem_initializer:                    mem_initializer_id LP expression_list.opt RP
-mem_initializer_id:                 scoped_id
+ctor_initializer.opt:               
+	/* empty */
+   | ctor_initializer
+	
+ctor_initializer:                   
+	COLON mem_initializer_list
+   | COLON mem_initializer_list bang error                         {/* UNBANG("Bad ctor-initializer."); */}
+	
+mem_initializer_list:               
+	mem_initializer
+   | mem_initializer_list_head mem_initializer
+	
+mem_initializer_list_head:          
+	mem_initializer_list CM
+   | mem_initializer_list bang error CM                         {/* UNBANG("Bad mem-initializer.");*/ }
+	
+mem_initializer:                    
+	mem_initializer_id LP expression_list.opt RP
+	
+mem_initializer_id:                 
+	scoped_id
 
 /*---------------------------------------------------------------------------------------------------
  * A.11 Overloading
  *---------------------------------------------------------------------------------------------------*/
-operator_function_id:               OPERATOR operator
+operator_function_id:               
+	OPERATOR operator
+	
 /*
  *  It is not clear from the ANSI standard whether spaces are permitted in delete[]. If not then it can
  *  be recognised and returned as DELETE_ARRAY by the lexer. Assuming spaces are permitted there is an
@@ -1177,119 +1388,168 @@ operator_function_id:               OPERATOR operator
  *  for a semantic rescue can be eliminated at the expense of a couple of shift-reduce conflicts by
  *  removing the comments on the next four lines.
  */
-operator:             /*++++*/      NEW
-    |                 /*++++*/      DELETE
-/*  |                 / ---- /      NEW                 %prec SHIFT_THERE
-/*  |                 / ---- /      DELETE              %prec SHIFT_THERE
-/*  |                 / ---- /      NEW LB RB                                                 -- Covered by array of OPERATOR NEW */
-/*  |                 / ---- /      DELETE LB RB                                              -- Covered by array of OPERATOR DELETE */
-    |                               PLUS
-    |                               MINUS
-    |                               MUL
-    |                               DIV
-    |                               MOD
-    |                               ER
-    |                               AND
-    |                               OR
-    |                               NOT
-    |                               BANG
-    |                               ASN
-    |                               LT
-    |                               GT
-    |                               ASS_ADD
-    |                               ASS_SUB
-    |                               ASS_MUL
-    |                               ASS_DIV
-    |                               ASS_MOD
-    |                               ASS_XOR
-    |                               ASS_AND
-    |                               ASS_OR
-    |                               SHL
-    |                               SHR
-    |                               ASS_SHR
-    |                               ASS_SHL
-    |                               EQ
-    |                               NE
-    |                               LE
-    |                               GE
-    |                               LOG_AND
-    |                               LOG_OR
-    |                               INC
-    |                               DEC
-    |                               CM
-    |                               ARROW_STAR
-    |                               ARROW
-    |                               LP RP
-    |                               LB RB
+operator:             
+	/*++++*/ NEW
+   | /*++++*/ DELETE
+/* | / ---- / NEW                 %prec SHIFT_THERE
+/* | / ---- / DELETE              %prec SHIFT_THERE
+/* | / ---- / NEW LB RB                                                 -- Covered by array of OPERATOR NEW */
+/* | / ---- / DELETE LB RB                                              -- Covered by array of OPERATOR DELETE */
+   | PLUS
+   | MINUS
+   | MUL
+   | DIV
+   | MOD
+   | ER
+   | AND
+   | OR
+   | NOT
+   | BANG
+   | ASN
+   | LT
+   | GT
+   | ASS_ADD
+   | ASS_SUB
+   | ASS_MUL
+   | ASS_DIV
+   | ASS_MOD
+   | ASS_XOR
+   | ASS_AND
+   | ASS_OR
+   | SHL
+   | SHR
+   | ASS_SHR
+   | ASS_SHL
+   | EQ
+   | NE
+   | LE
+   | GE
+   | LOG_AND
+   | LOG_OR
+   | INC
+   | DEC
+   | CM
+   | ARROW_STAR
+   | ARROW
+   | LP RP
+   | LB RB
 
 /*---------------------------------------------------------------------------------------------------
  * A.12 Templates
  *---------------------------------------------------------------------------------------------------*/
-template_declaration:               template_parameter_clause declaration
-    |                               EXPORT template_declaration
-template_parameter_clause:          TEMPLATE LT template_parameter_list GT
-template_parameter_list:            template_parameter
-    |                               template_parameter_list CM template_parameter
-template_parameter:                 simple_type_parameter
-    |                               simple_type_parameter ASN type_id
-    |                               templated_type_parameter
-    |                               templated_type_parameter ASN identifier
-    |                               templated_parameter_declaration
-    |                               bang error                                                  {/* UNBANG("Bad template-parameter."); */}
-simple_type_parameter:              CLASS
-/*  |                               CLASS identifier                                            -- covered by parameter_declaration */
-    |                               TYPENAME
-/*  |                               TYPENAME identifier                                         -- covered by parameter_declaration */
-templated_type_parameter:           template_parameter_clause CLASS
-    |                               template_parameter_clause CLASS identifier
-template_id:                        TEMPLATE identifier LT template_argument_list GT
-    |                               TEMPLATE template_id
+template_declaration:               
+	template_parameter_clause declaration
+   | EXPORT template_declaration
+	
+template_parameter_clause:          
+	TEMPLATE LT template_parameter_list GT
+	
+template_parameter_list:            
+	template_parameter
+   | template_parameter_list CM template_parameter
+	
+template_parameter:                 
+	simple_type_parameter
+   | simple_type_parameter ASN type_id
+   | templated_type_parameter
+   | templated_type_parameter ASN identifier
+   | templated_parameter_declaration
+   | bang error                                                  {/* UNBANG("Bad template-parameter."); */}
+	
+simple_type_parameter:              
+	CLASS
+/* | CLASS identifier                                            -- covered by parameter_declaration */
+   | TYPENAME
+/* | TYPENAME identifier                                         -- covered by parameter_declaration */
+
+templated_type_parameter:           
+	template_parameter_clause CLASS
+   | template_parameter_clause CLASS identifier
+	
+template_id:                        
+	TEMPLATE identifier LT template_argument_list GT
+   | TEMPLATE template_id
+	
 /*
  *  template-argument is evaluated using a templated...expression so that > resolves to end of template.
  */
-template_argument_list:             template_argument
-    |                               template_argument_list CM template_argument
-template_argument:                  templated_parameter_declaration
-/*  |                               type_id                                                     -- covered by templated_parameter_declaration */
-/*  |                               template_name                                               -- covered by templated_parameter_declaration */
-/*  |                               error                                                       -- must allow template failure to re-search */
+template_argument_list:             
+	template_argument
+   | template_argument_list CM template_argument
+	
+template_argument:                  
+	templated_parameter_declaration
+/* | type_id                                                     -- covered by templated_parameter_declaration */
+/* | template_name                                               -- covered by templated_parameter_declaration */
+/* | error                                                       -- must allow template failure to re-search */
 
 /*
  *  Generalised naming makes identifier a valid declaration, so TEMPLATE identifier is too.
  *  The TEMPLATE prefix is therefore folded into all names, parenthesis_clause and decl_specifier_prefix.
  */
-/*explicit_instantiation:           TEMPLATE declaration */
-explicit_specialization:            TEMPLATE LT GT declaration
+/*explicit_instantiation:           
+	TEMPLATE declaration */
+	
+explicit_specialization:            
+	TEMPLATE LT GT declaration
 
 /*---------------------------------------------------------------------------------------------------
  * A.13 Exception Handling
  *---------------------------------------------------------------------------------------------------*/
-try_block:                          TRY compound_statement handler_seq
+try_block:                          
+	TRY compound_statement handler_seq
+	
 /*function_try_block:                                                                           -- moved near function_block */
-handler_seq:                        handler
-    |                               handler handler_seq
-handler:                            CATCH LP exception_declaration RP compound_statement
-exception_declaration:              parameter_declaration
+handler_seq:                        
+	handler
+   | handler handler_seq
+	
+handler:                            
+	CATCH LP exception_declaration RP compound_statement
+	
+exception_declaration:              
+	parameter_declaration
+	
 /*                                  ELLIPSIS                                                    -- covered by parameter_declaration */
-throw_expression:                   THROW
-    |                               THROW assignment_expression
-templated_throw_expression:         THROW
-    |                               THROW templated_assignment_expression
-exception_specification:            THROW LP RP
-    |                               THROW LP type_id_list RP
-type_id_list:                       type_id
-    |                               type_id_list CM type_id
+throw_expression:                   
+	THROW
+   | THROW assignment_expression
+	
+templated_throw_expression:         
+	THROW
+   | THROW templated_assignment_expression
+	
+exception_specification:            
+	THROW LP RP
+   | THROW LP type_id_list RP
+	
+type_id_list:                       
+	type_id
+   | type_id_list CM type_id
 
 /*---------------------------------------------------------------------------------------------------
  * Back-tracking and context support
  *---------------------------------------------------------------------------------------------------*/
-advance_search:                     error               {/* yyerrok; yyclearin; advance_search(); */} /* Rewind and queue '+' or '-' '#' */       
-bang:                               /* empty */         {/* suppress_parse_error = 1; */}   /* set flag to suppress "parse error" */ 
-mark:                               /* empty */         {/* mark(); */}        /* Push lookahead and input token stream context onto a stack */
-nest:                               /* empty */         {/* nest(); */}        /* Push a declaration nesting depth onto the parse stack */
-start_search:                       /* empty */         {/* start_search(false); */}    /* Create/reset binary search context */
-start_search1:                      /* empty */         {/* start_search(true); */}     /* Create/reset binary search context */
-util:                               /* empty */           /* Get current utility mode */
+advance_search:                     
+	error               {/* yyerrok; yyclearin; advance_search(); */} /* Rewind and queue '+' or '-' '#' */       
+	
+bang:                               
+	/* empty */         {/* suppress_parse_error = 1; */}   /* set flag to suppress "parse error" */ 
+	
+mark:                               
+	/* empty */         {/* mark(); */}        /* Push lookahead and input token stream context onto a stack */
+	
+nest:                               
+	/* empty */         {/* nest(); */}        /* Push a declaration nesting depth onto the parse stack */
+	
+start_search:                       
+	/* empty */         {/* start_search(false); */}    /* Create/reset binary search context */
+	
+start_search1:                      
+	/* empty */         {/* start_search(true); */}     /* Create/reset binary search context */
+	
+util:                               
+	/* empty */           /* Get current utility mode */
 
 %%
 
